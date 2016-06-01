@@ -7,7 +7,7 @@ For scalar diffusions with drift \code{mu=function(X,t){}} and diffusion \code{s
 }
 
 \usage{
-MOL.density(Xs, s, t, xlims, N = 31, delt, final.only = FALSE)
+MOL.density(Xs, s, t, xlims, N = 31, delt, mu, sig, final.only = FALSE)
 }
 
 \arguments{
@@ -17,15 +17,16 @@ MOL.density(Xs, s, t, xlims, N = 31, delt, final.only = FALSE)
   \item{xlims}{Limits for the spatial nodes of the lattice. These limits should be wide enough for the transition density to be negligibly small at the endpoints (see note \bold{[2]}).}
   \item{N}{The number of nodes in the spatial domain at which to evaluate the transitional density. Increase \code{N} for more accurate approximations (see note \bold{[3]} and warning \bold{[2]}).}
   \item{delt}{Step size for the time domain of the lattice (see note \bold{[4]}).}
+   \item{mu}{Optional (if drift and diffusion coefficients are already defined) arguments giving the drift and diffusion coefficients as text expressions (See \bold{Interface} below).}
+   \item{sig}{Optional (if drift and diffusion coefficients are already defined) arguments giving the drift and diffusion coefficients as text expressions (See \bold{Interface} below).}
   \item{final.only}{Should the transition density on the entire lattice be returned (\code{FALSE}) or only the at the terminal point of the transition horizon \code{t} (\code{TRUE}). Default = \code{FALSE}.}
 }
 
-\details{
-}
+
 
 \value{
   \item{density}{Matrix containing the density approximation (vector if \code{final.only = TRUE}).}
-  \item{X}{Vector of spatial values at which approximation was carried out.}
+  \item{Xt}{Vector of spatial values at which approximation was carried out.}
   \item{time}{Vector of time nodes at which the approximation was evaluated.}
 }
 
@@ -72,37 +73,18 @@ further analysis may be conducted by calling the function \code{MOL.density()}.
 \seealso{\code{\link{MOL.passage}}, \code{\link{BiMOL.density}}.}
 
 \examples{
-%\dontrun{
+\donttest{
 #===============================================================================
 # Cubic diffusion with time-varying coefficients.
 #===============================================================================
-x11()
-par(ask=F)
+
 # Define drift and diffusion terms.
-mu  = function(X,t){2*X*(1+0.5*sin(2*pi*t/4)-X^2)}
-sig = function(X,t){1}
-MM2 = MOL.density(c(-1),0,15,c(-3,3),81,1/250)
-library(rgl)
+mu  <- function(X,t){2*X*(1+0.5*sin(2*pi*t/4)-X^2)}
+sig <- function(X,t){1}
+res <- MOL.density(c(-1),0,15,c(-3,3),81,1/250)
 
-# Plot transitional density.
-persp3d(MM2$X,MM2$time,pmin(MM2$density,1.),col='green',xlab='X_t',ylab='Time',zlab='Density')
-par3d(userMatrix=rbind(
-c(   -0.8232552,  0.5673898, 0.0178844,  0),
-c(   -0.2103823, -0.3342130, 0.9187169,  0),
-c(    0.5272479,  0.7525760, 0.3945113,  0),
-c(    0.0000000,  0.0000000, 0.0000000,  1)))
+MOL.plot(res)
 
-for(i in seq(1,dim(MM2$density)[1],length=100))
-{
-  lines3d(MM2$X[i],MM2$time,pmin(MM2$density,1.)[i,],col='blue')  
-}
-# Create a contour plot of the transitional density. 
-cols=colorRampPalette(c('blue','green','yellow','red'))
-filled.contour(MM2$time,MM2$X,t(MM2$density),levels=seq(0.05,1.2,0.05),
-               col=cols(length(seq(0.05,1.2,0.05)+1)),ylab='State',xlab='Time',
-               plot.axes={abline(h=0);axis(1);axis(2)},
-               main='Contour Plot of Transition Density')
-               
 #-------------------------------------------------------------------------------
-%}
+}
 }

@@ -1,6 +1,13 @@
- RS.impute=function (X, T.seq, M = 10, theta1 = c(4, 4, 4, 4), theta2 = c(2,2), prop.sds1 = c(0.5, 0.5, 0.5, 0.5), prop.sds2 = c(0.1,0.1), transform = c(1), N.updates = 2000, exclude = NULL,bridge.plot = F, plot.chain = T)
+ RS.impute=function (X, time, M, theta, sds, diff.type = 1, burns = min(floor(updates/2),25000), updates, plot.chain = TRUE, imputation.plot = FALSE, palette = 'mono')
 {
+  exclude = NULL
+  transform = diff.type
+  theta1= theta[1:(length(theta)-1)]
+  theta2= theta[length(theta)]
+  prop.sds1= sds[1:(length(theta)-1)]
+  prop.sds2= sds[length(theta)]
   X1=X
+  T.seq =time
   d=diff(T.seq)
   dd=rep(d/(M),each=M)
   dddd=rep(d,each=M+1)
@@ -90,19 +97,21 @@
 
 
   k   = rep(0,1)
-  kk  = matrix(0,1,N.updates)
+  kk  = matrix(0,1,updates)
   ba1 = rep(1,N-1)
   ba2 = ba1
-  ll  = rep(0,N.updates)
+  ll  = rep(0,updates)
   sss = 1:(length(X1)*M)
   ss  = seq(1,length(sss),by=M)
   lastss = seq(M,(M)*(N-1),by=M)
-  pers1  = matrix(0,length(theta1),N.updates)
-  pers2  = matrix(0,length(theta2),N.updates)
+  pers1  = matrix(0,length(theta1),updates)
+  pers2  = matrix(0,length(theta2),updates)
   pers1[,1] = theta1
   pers2[,1] = theta2
   n1 = length(theta1)
   n2 = length(theta2)
+  pers.temp= matrix(0,length(theta),updates)
+  pers.temp[,1]=theta
   Z1.=alg1()
 
   X1. = h1(nu(f1(X1,pers2[1,1]),Z1.),pers2[1,1])
@@ -121,7 +130,7 @@
   #  exclude = N + 200
   #}
 
-  pb <- txtProgressBar(1, N.updates, 1, style = 3, width = 56)
+  pb <- txtProgressBar(1, updates, 1, style = 3, width = 56)
   tme = Sys.time()
   NN = length(X1.)
 
@@ -129,10 +138,12 @@
   ll[1] = llold.1
   tme = Sys.time()
 
-  for (i in 2:N.updates)
+  for (i in 2:updates)
   {
     theta1.new=pers1[,i-1]+rnorm(n1,sd=prop.sds1)
+
     sgnew=(pers2[,i-1]+rnorm(n2,sd=prop.sds2))
+    pers.temp[,i]=c(theta1.new,sgnew)
 
     measure1 = sum(dnorm(diff(f1(X1,sgnew[1]))/sqrt(d),log=T)-dnorm(diff(f1(X1,pers2[1,i-1]))/sqrt(d),log=T))
 
@@ -169,14 +180,19 @@
     llold.1=sum(likelihood2(h1(nu(f1(X1,pers2[1,i]),Z1.),pers2[1,i]),pers1[,i],pers2[,i]))
     ll[i]=llold.1
 
-     if(bridge.plot)
+     if(imputation.plot)
     {
-      plot(X1[1:50]~T.seq[1:50],type="n",pch="+",col="red",ylim=range(h1(nu(f1(X1,pers2[1,i]),Z1.),pers2[1,i])))
-      lines(h1(nu(f1(X1,pers2[1,i]),Z1.),pers2[1,i])~ttt,col="blue")
-      points(X1.[endpts]~ttt[endpts],pch=19,col='purple')
-      #Sys.sleep(1)
+      if((i%%25==0)&(i<burns))
+      {
+        plot(X1~T.seq,type="n",pch="+",col="red",ylim = c(min(X)-0.2*abs(min(X)),1.2*max(X)),
+        main = '',ylab = 'Xt',xlab='Time (t)')
+        points(h1(nu(f1(X1,pers2[1,i]),Z1.),pers2[1,i])~ttt,col="#BBCCEE",pch=20,cex=0.7)
+        points(X1.[endpts]~ttt[endpts],pch='+',col='#222299')
+        legend('topright',pch=c(20,3),col=c("#BBCCEE","#222299"),legend=c('Imputed','Observed'),
+        bty='n')
+      }
      # abline(v=greens,col="purple")
-     #Sys.sleep(0.2)
+
     }
     if(is.na(pers1[1,i]))
     {
@@ -205,7 +221,7 @@
     homo.res = F
   }
   homo = T
-  Info2 = c(buffer7, paste0("Chain Updates       : ", N.updates),
+  Info2 = c(buffer7, paste0("Chain Updates       : ", updates),
             paste0("Time Homogeneous    : ", c("Yes", "No")[2 - homo]),
             paste0("Data Resolution     : ", c(paste0("Homogeneous: dt=",round(max(diff(T.seq)), 4)), paste0("Variable: min(dt)=",round(min(diff(T.seq)), 4), ", max(dt)=",round(max(diff(T.seq)), 4)))[2 - homo.res]), paste0("Imputed Resolution  : ",c(paste0("Homogeneous: dt=", round(max(diff(T.seq)/M),4)), paste0("Variable: min(dt)=", round(min(diff(T.seq)/M),4), ", max(dt)=", round(max(diff(T.seq)/M), 4)))[2 -homo.res]), paste0("Elapsed time        : ",tme), paste0("dim(theta)          : ", round(n1 +n2, 3)), buffer1)
   Info2 = data.frame(matrix(Info2, length(Info2), 1))
@@ -213,6 +229,8 @@
   print(Info2, row.names = FALSE, right = F)
 
     acc=kk
+    if(plot.chain)
+    {
     nper=n1+n2
     d1=1:((n1+n2)+2)
     d2=d1
@@ -225,47 +243,61 @@
     d1=d1[col(test)[wh[1]]]
     d2=d2[row(test)[wh[1]]]
     par(mfrow=c(d1,d2))
-    cols=rainbow(nper)
+    if(palette=='mono')
+    {
+      cols =rep('#222299',nper)
+    }else{
+      cols=rainbow_hcl(nper, start = 10, end = 275,c=100,l=70)
+    }
     j=0
     for(i in 1:n1)
     {
       j=j+1
-      plot(pers1[i,],col=cols[j],type="l",ylab="",
+
+      plot(pers.temp[j,],col='gray90',type="s",ylab="",
       xlab="Iteration",main=paste0("theta[",i,"]"))
-      abline(v=min(10000,N.updates/2),lty="dotdash")
+      lines(pers1[i,],col=cols[j],type='s')
+      abline(v=burns,lty="dotdash")
     }
     for(i in 1:n2)
     {
      j=j+1
-     plot(pers2[i,],col=cols[j],type="l",ylab="",
+     plot(pers.temp[j,],col='gray90',type="s",ylab="",
      xlab="Iteration",main=paste0("sigma[",i,"]"))
-     abline(v=min(10000,N.updates/2),lty="dotdash")
+     lines(pers2[i,],col=cols[j],type='s')
+     abline(v=burns,lty="dotdash")
     }
-   plot(acc[1,],type="n",col="blue",ylim=c(0,1),main="AcceptanceRates",xlab="Iteration",ylab="Rate")
-   polygon(c(0,length(acc[1,]),length(acc[1,]),0),c(0.4,0.4,0,-0),col="lightblue",border=NA)
+   plot(acc[1,],type="n",col="blue",ylim=c(0,1),main="Acc. Rates",xlab="Iteration",ylab="Rate")
+   #polygon(c(0,length(acc[1,]),length(acc[1,]),0),c(0.4,0.4,0,-0),col="lightblue",border=NA)
    #polygon(c(0,length(acc[1,]),length(acc[1,]),0),c(1,1,0.6,0.6),col="lightgreen",border=NA)
    lines(acc[1,],type="l",col="darkblue")
    #lines(acc[2,],type="l",col="darkgreen")
    abline(h=seq(0,1,1/10),lty="dotted")
-   plot(ba1/N.updates,pch=4,col=4,ylim=c(0,1),type="n",
-   main=paste("BBAcceptanceRates(M=",M,")"),xlab="Transition",ylab="Rate")
-   polygon(c(0,length(ba1/N.updates),length(ba1/N.updates),0),c(1,1,0.8,0.8),col="lightblue",border=NA)
-   points(ba1/N.updates,pch="-",col=4)
-   points(ba2/N.updates,pch="-",col=3)
+   abline(v=burns,lty='dotdash')
+   abline(h=0.4,lty='solid',col='red',lwd=1.2)
+   abline(h=0.2,lty='solid',col='red',lwd=1.2)
+   plot(ba1/updates,pch=4,col=4,ylim=c(0,1),type="n",
+   main=paste("BB-acc. (M=",M,")"),xlab="Transition",ylab="Rate")
+   polygon(c(0,length(ba1/updates),length(ba1/updates),0),c(1,1,0.8,0.8),col="lightblue",border=NA)
+   points(ba1/updates,pch="-",col=4)
+   #points(ba2/updates,pch="-",col=3)
    abline(h=seq(0,1,1/10),lty="dotted")
    abline(h=c(0.6),lty="dashed",col="red",lwd=1.2)
-   if(any(ba1/N.updates<0.6))
+   if(any(ba1/updates<0.6))
   {
-    wh=which((ba1/N.updates)<0.6)
-    text((ba1/N.updates)[wh]~wh,labels=wh,pch=0.5,pos=1)
+    wh=which((ba1/updates)<0.6)
+    text((ba1/updates)[wh]~wh,labels=wh,pch=0.5,pos=1)
   }
-  if(any(ba2/N.updates<0.6))
+  if(any(ba2/updates<0.6))
  {
-    wh=which((ba2/N.updates)<0.6)
-    text((ba2/N.updates)[wh]~wh,labels=wh,pch=0.5,pos=1)
+    wh=which((ba2/updates)<0.6)
+    text((ba2/updates)[wh]~wh,labels=wh,pch=0.5,pos=1)
  }
  #abline(v=exclude,col="grey75",lty="dashed")
  #mtext(exclude,side=1,cex=0.5,at=exclude)
+ }
  theta=rbind(pers1,pers2)
- return(list(per.matrix=t(theta),acceptence.rate=t(acc),bridge.rate=cbind(ba1/N.updates,ba2/N.updates),run.time=tme))
+ ret = (list(par.matrix=t(theta),acceptance.rate=t(acc),bridge.rate=cbind(ba1/updates,ba2/updates),run.time=tme))
+ class(ret) = 'RS.impute'
+ return(ret)
 }

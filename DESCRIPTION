@@ -1,9 +1,25 @@
 Package: DiffusionRimp
-Type: Package
-Title: What the package does (short line)
-Version: 1.0
-Date: 2014-10-06
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Version: 0.1.0
+Title: Inference and Analysis for Diffusion Processes via Data Imputation and Method of Lines
+Description: Tools for performing inference and analysis using a data-imputation scheme and the method of lines.
+Authors@R:c(person("Etienne A.D.", "Pienaar", email = "etiennead@gmail.com",role = c("aut", "cre")),
+             person("Melvin M.", "Varughese", email = "melvin.varughese@uct.ac.za",role = c("ctb")))
+URL: https://github.com/eta21
+BugReports: https://github.com/eta21/DiffusionRimp/issues
+MailingList: Please send questions and comments to etiennead@gmail.com.
+Depends: R (>= 3.2.1)
+Imports:
+    Rcpp,
+    RcppArmadillo,
+    rgl,
+    colorspace
+LinkingTo: Rcpp, RcppArmadillo
+Suggests:
+    DiffusionRgqd,
+    DiffusionRjgqd,
+    knitr,
+    coda,
+    Quandl,
+    R.rsp
+License: GPL (>= 2)
+VignetteBuilder: knitr, R.rsp

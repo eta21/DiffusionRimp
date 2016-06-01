@@ -7,31 +7,38 @@
 }
 
 \usage{
-BiMOL.density(Xs, Ys, s , t , xlims, ylims, N, delt, final.only = FALSE, show.lattice = TRUE)
+BiMOL.density(Xs, Ys, s , t , xlims, ylims, N, delt, mu1, mu2, 
+             sig11, sig12, sig21, sig22, final.only = FALSE, 
+             show.lattice = FALSE)
 }
 
 \arguments{
   \item{Xs}{Starting/Initial X-coordinate for the diffusion process (see note \bold{[1]} and warning \bold{[1]}).}
-  \item{Xs}{Starting/Initial Y-coordinate for the diffusion process (see note \bold{[1]} and warning \bold{[1]}).}  
+  \item{Ys}{Starting/Initial Y-coordinate for the diffusion process (see note \bold{[1]} and warning \bold{[1]}).}  
   \item{s}{Starting time for the diffusion process.}
   \item{t}{Value (>s) giving the terminal point for the transition horizon (the final time at which to evaluate the transition density).}
   \item{xlims}{X-limits for the spatial nodes of the lattice. These limits should be wide enough for the transition density to be negligibly small at the endpoints (see note \bold{[2]}).}
   \item{ylims}{Y-limits for the spatial nodes of the lattice. These limits should be wide enough for the transition density to be negligibly small at the endpoints (see note \bold{[2]}).}
   \item{N}{The number of nodes in each spatial domain at which to evaluate the transitional density. Increase \code{N} for more accurate approximations (see note \bold{[3]} and warning \bold{[2]}).}
+ \item{mu1}{Optional (if drift and diffusion coefficients are already defined) arguments giving the drift and diffusion coefficients as text expressions (See \bold{Interface} below).}
+ \item{mu2}{Optional (if drift and diffusion coefficients are already defined) arguments giving the drift and diffusion coefficients as text expressions (See \bold{Interface} below).}
+  \item{sig11}{Optional (if drift and diffusion coefficients are already defined) arguments giving the drift and diffusion coefficients as text expressions (See \bold{Interface} below).}
+ \item{sig12}{Optional (if drift and diffusion coefficients are already defined) arguments giving the drift and diffusion coefficients as text expressions (See \bold{Interface} below).}
+  \item{sig21}{Optional (if drift and diffusion coefficients are already defined) arguments giving the drift and diffusion coefficients as text expressions (See \bold{Interface} below).}
+ \item{sig22}{Optional (if drift and diffusion coefficients are already defined) arguments giving the drift and diffusion coefficients as text expressions (See \bold{Interface} below).}
   \item{delt}{Step size for the time domain of the lattice (see note \bold{[4]}). }
   \item{final.only}{Should the transition density on the entire lattice be returned (\code{FALSE}) or only the at the terminal point of the transition horizon \code{t} (\code{TRUE}). Default = \code{FALSE}.}
   \item{show.lattice}{If \code{=TRUE} (default) then the X-Y lattice is drawn and the initial value is indicated in red.}
 }
 
-\details{
-}
+
 
 \value{
   \item{density}{3D array containing the density approximation (matrix if \code{final.only = TRUE}).}
-  \item{X}{
+  \item{Xt}{
   Vector of X-coordinates at which approximation was carried out.
   }
-  \item{Y}{Vector of Y-coordinates at which approximation was carried out.}
+  \item{Yt}{Vector of Y-coordinates at which approximation was carried out.}
   \item{time}{Vector of time nodes at which the approximation was evaluated.}
 }
 
@@ -57,9 +64,9 @@ are defined as R-functions in the current workspace. That is by defining the dri
  
  \code{mu2=function(X,Y,t){some expression i.t.o. X, Y and t}}
 
- \code{sig1=function(X,Y,t){some expression i.t.o. X, Y and t}}
+ \code{sig11=function(X,Y,t){some expression i.t.o. X, Y and t}}
 
- \code{sig2=function(X,Y,t){some expression i.t.o. X, Y and t}}
+ \code{sig22=function(X,Y,t){some expression i.t.o. X, Y and t}}
 
 further analysis may be conducted by calling the function \code{BiMOL.density()}.
 }
@@ -83,49 +90,33 @@ further analysis may be conducted by calling the function \code{BiMOL.density()}
 \seealso{\code{\link{MOL.passage}}, \code{\link{MOL.density}}.}
 
 \examples{
-%\dontrun{
+\donttest{
 #===============================================================================
 # Bi-cubic diffusion with oscillating spin.
 #===============================================================================
- rm(list=ls(all=TRUE))
- 
- # Define drift and diffusion terms.
- mu1=function(X,Y,t){X*(1-X^2)+sin(2*pi*t/4)*Y}
- mu2=function(X,Y,t){Y*(1-Y^2)-sin(2*pi*t/4)*X}
- sig1=function(X,Y,t){0.5}
- sig2=function(X,Y,t){0.5}
- 
- # Parameters of the problem.
- Xstart = 1                       # Starting X-coordinate
- Ystart = 1                       # Starting X-coordinate
- tmin   = 0                       # Starting time
- tmax   = 15                      # Final horizon time
- X_lattice_limits =  c(-2.2,2.2)  # Lattice endpoints in X dim
- Y_lattice_limits =  c(-2.2,2.2)  # Lattice endpoints in Y dim
- N.points = 51                    # How many nodes (incl. ends)
- delt =1/100                      # Time stepsize
 
- x11()
- par(ask=F)
- 
- # Run the Method of Lines.
- res=BiMOL.density(Xstart,Ystart,tmin,tmax,
-          X_lattice_limits,Y_lattice_limits,
-          N.points ,delt)
- 
+ # Define drift and diffusion terms:
+ mu1   <- function(X,Y,t){X*(1-X^2)+sin(2*pi*t/4)*Y}
+ mu2   <- function(X,Y,t){Y*(1-Y^2)-sin(2*pi*t/4)*X}
+ sig11 <- function(X,Y,t){0.5}
+ sig22 <- function(X,Y,t){0.5}
 
- ss=seq(1,dim(res$density)[3],length=100)
-
- cols=colorRampPalette(c('blue','green','yellow','red'))
- for(i in ss)
- {
-     levs=seq(0.001,0.8,0.01)
-     filled.contour(res$X,res$Y,res$density[,,i],levels=levs,
-                col=cols(length(levs)+1),ylab='State',xlab='Time',
-                plot.axes={abline(h=0,v=0);axis(1);axis(2)},
-                main='Contour Plot of Transition Density')
- }
+ # Parameters of the problem:
+ Xs     <- 1            # Starting X-coordinate
+ Ys     <- 1            # Starting Y-coordinate
+ s      <- 0            # Starting time
+ t      <- 15           # Final horizon time
+ Xlim   <- c(-2.2, 2.2) # Lattice endpoints in X dim
+ Ylim   <- c(-2.2, 2.2) # Lattice endpoints in Y dim
+ Nodes  <- 51           # How many nodes (incl. ends)
+ delt   <- 1/100        # Time stepsize
+ 
+ # Run the Method of Lines:
+ res <- BiMOL.density(Xs, Ys, s, t, Xlim, Ylim, Nodes, delt)
+ 
+ # Plot the density
+ MOL.plot(res)
  
 #-------------------------------------------------------------------------------
-%}
+}
 }

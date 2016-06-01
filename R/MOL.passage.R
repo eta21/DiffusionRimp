@@ -1,15 +1,42 @@
 
-MOL.passage=function(Xs,t=1,barriers,N=31,delt=1/100,desc=1)
+MOL.passage=function(Xs,t,barriers,N,delt,mu,sig,desc=1)
 {
   xx1=seq(barriers[1],barriers[2],length=N)
   dx1=diff(xx1)[1]
   dxx1=dx1^2
+     if((missing(mu)&&missing(sig)))
+  {
+
+    namess=c('mu','sig')
+    namess2=c('muu','sigg')
+    txt =rep('+rep(0,length(X))',2)
+    func.list=rep(0,length(namess))
+    obs=objects(pos=1)
+    muu  =function(X,t){}
+    sigg =function(X,t){}
+    for(i in 1:length(namess))
+    {
+      if(sum(obs==namess[i]))
+      {
+        txt[i] = paste0(body(namess[i])[2],txt[i])
+      }
+    }
+    body(muu)  =  parse(text=txt[1])
+    body(sigg) =  parse(text=txt[2])
+  }else
+  {
+    muu  =function(X,t){}
+    sigg =function(X,t){}
+    body(muu) =  parse(text=paste0(mu,'+rep(0,length(X))'))
+    body(sigg)=  parse(text=paste0(sig,'+rep(0,length(X))'))
+  }
+  
   if(desc==1)
   {
     f=function(U,tme)
     {
-      SU1= sig(xx1)^2
-      D1 = mu(xx1)[-c(1,N)]*(U[-c(1,2)]-U[-c(N-1,N)])/dx1/2
+      SU1= sigg(xx1)^2
+      D1 = muu(xx1)[-c(1,N)]*(U[-c(1,2)]-U[-c(N-1,N)])/dx1/2
       D2 =  1/2*SU1[-c(1,N)]*((U[-c(1,2)]-2*U[-c(1,N)]+U[-c(N-1,N)]))/dxx1
       MMM1=(D1+D2)
       return(c(0,MMM1,0))
@@ -21,8 +48,8 @@ MOL.passage=function(Xs,t=1,barriers,N=31,delt=1/100,desc=1)
   {
     f=function(U,tme)
     {
-      SU1= sig(xx1)^2
-      D1 = mu(xx1)[-N]*(U[-1]-U[-N])/dx1/2
+      SU1= sigg(xx1)^2
+      D1 = muu(xx1)[-N]*(U[-1]-U[-N])/dx1/2
       D2 =  1/2*SU1[-c(1,N)]*((U[-c(1,2)]-2*U[-c(1,N)]+U[-c(N-1,N)]))/dxx1
       MMM1=(D1+c(0,D2))
       return(c(MMM1,0))
@@ -35,8 +62,8 @@ MOL.passage=function(Xs,t=1,barriers,N=31,delt=1/100,desc=1)
   {
     f=function(U,tme)
     {
-      SU1= sig(xx1)^2
-      D1 = mu(xx1)[-1]*(U[-1]-U[-N])/dx1/2
+      SU1= sigg(xx1)^2
+      D1 = muu(xx1)[-1]*(U[-1]-U[-N])/dx1/2
       D2 =  1/2*SU1[-c(1,N)]*((U[-c(1,2)]-2*U[-c(1,N)]+U[-c(N-1,N)]))/dxx1
       MMM1=(D1+c(D2,0))
       return(c(0,MMM1))
@@ -151,7 +178,8 @@ MOL.passage=function(Xs,t=1,barriers,N=31,delt=1/100,desc=1)
     y=ymin+(ymax-ymin)*(Xs-xx1[wh2])/(xx1[wh1]-xx1[wh2])
     dens=c(0,-diff(y)/delt)
   }
-   return(list(surface=MM,density=dens,X=xx1,time=seq(0,t,delt)))
-
+   ret = (list(surface=MM,density=dens,Xt=xx1,time=seq(0,t,delt)))
+   class(ret) = 'MOL.passage'
+   return(ret)
 }
 

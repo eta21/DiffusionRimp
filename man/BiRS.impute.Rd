@@ -9,23 +9,25 @@ where \bold{\eqn{mux(X_t, Y_t, t, theta)}} and \bold{\eqn{muy(X_t, Y_t, t, theta
 }
 
 \usage{
-BiRS.impute(X, T.seq, M = 10, theta1, theta2, prop.sds1, prop.sds2, transform, 
-             N.updates, exclude = NULL, bridge.plot = FALSE, plot.chain = TRUE)
+BiRS.impute(X, time, M, theta1, theta2, sds1, sds2, transform = c(1,1), 
+            burns = min(floor(updates/2),25000), updates, plot.chain = TRUE, 
+            imputation.plot = FALSE, palette = 'mono')
 }
 
 \arguments{
   \item{X}{N x 2 matrix of coordinates at which the diffusion process was observed, where N is the number of observations.}  
-  \item{T.seq}{A vector of time nodes at which the process was observed.}
+  \item{time}{A vector of time nodes at which the process was observed.}
   \item{M}{The number of points to impute between successive observations. Note that as the transition horizon increases, more points may be required in order to get desirable acceptance rates for Brownian bridges. Note that some transition horizons may be removed from likelihood calculations - see \code{exclude}.}
   \item{theta1}{Starting parameters for the drift parameters. }
   \item{theta2}{Starting parameters for \eqn{sigma[1]} and \eqn{sigma[2]}.}
-  \item{prop.sds1}{Proposal standard deviations for the drift parameter chain where \code{theta1[i]_new ~ N(\code{theta1[i]_old},\code{prop.sds1[i]}) }}
-  \item{prop.sds2}{Proposal standard deviations for the volatility parameter chain where \code{theta2[i]_new ~ N(\code{theta2[i]_old},\code{prop.sds2[i]}) }}
+  \item{sds1}{Proposal standard deviations for the drift parameter chain.}
+  \item{sds2}{Proposal standard deviations for the volatility parameter chain.}
   \item{transform}{2-Component vector of indicators, each assuming values 1, 2 or 3, for which of the predefined volatility structures to impose - see note \bold{[3]}.}
-  \item{N.updates}{The number of updates to perform.}
-  \item{exclude}{ Vector indicating which transitions to exclude from the analysis. Default = \code{NULL}.}
-  \item{bridge.plot}{Display imputed paths for successive updates - see note \bold{[4]}. Default = \code{FALSE}.}
+  \item{burns}{The number of updates to burn (only affects traceplots).}
+  \item{updates}{The number of updates to perform.}
+  \item{imputation.plot}{Display imputed paths for successive updates - see note \bold{[4]}. Default = \code{FALSE}.}
   \item{plot.chain}{Display the resulting MCMC chain - see notes \bold{[5]}, \bold{[6]} and \bold{[7]}.}
+  \item{palette}{Colour palette for drawing trace plots. Default \code{palette = 'mono'}, otherwise a qualitative palette will be used.}
 }
 
 \details{
@@ -76,29 +78,12 @@ Note that \code{theta} is a reserved variable for the parameters. It is left to 
 \seealso{\code{\link{RS.impute}}, \code{\link{BiMOL.density}}.}
 
 \examples{ 
-%\dontrun{
+\donttest{
 rm(list=ls(all=TRUE))
 #===============================================================================
 # Lets perform inference on a time in-homogeneous 2D CIR process.
 #===============================================================================
 
- # Read in the simulated data.
- data(TiCIR)
- x=TiCIR
- plot(x$X_t~x$t,col='blue',type='l')
- lines(x$Y_t~x$t,col=2)
-
- # Define the drift functions.
- mux=function(X,Y,t,theta){theta[1]*(theta[2]-X)+theta[3]*Y}
- muy=function(X,Y,t,theta){theta[4]*(theta[5]+theta[6]*sin(2*pi*t/12)-Y)}
-
- # Impute 25 points per transition and ignore the 50th and 60th transition.
- res=BiRS.impute(cbind(x$X_t,x$Y_t),x$t,25,c(5,15,2,5,15,5),c(2,2),c(1,1,1,1,1,1)/10,c(1,1)/100,N.updates=50000,transform=c(2,2),exclude=c(50,60))
- comp=cbind(c(1.5,5,0.1,2.5,5,1,0.5,0.5),apply(res$per.matrix[10000:50000,],2,mean))
- colnames(comp) = c('True','Ests.')
- rownames(comp)=c(paste0('theta[',1:6,']'),paste0('sigma[',1:2,']'))
- print(data.frame(format(comp,digits=3)))
- 
 #-------------------------------------------------------------------------------
-%}
+}
 }

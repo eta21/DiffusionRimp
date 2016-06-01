@@ -10,27 +10,23 @@ where \bold{\eqn{mu(X_t, theta)}} may be defined with near-complete freedom as R
 }
 
 \usage{
-RS.impute(X, T.seq, M = 10, theta1, theta2, prop.sds1, prop.sds2, transform, 
-           N.updates, exclude = NULL, bridge.plot = FALSE, plot.chain = TRUE) 
+RS.impute(X, time, M, theta, sds, diff.type = 1, burns = min(floor(updates/2),25000), 
+          updates, plot.chain = TRUE, imputation.plot = FALSE, palette = 'mono') 
 }
-
 \arguments{
   \item{X}{Vector of coordinates at which the diffusion process was observed, where N is the number of observations.}  
-  \item{T.seq}{A vector of time nodes at which the process was observed.}
+  \item{time}{A vector of time nodes at which the process was observed.}
   \item{M}{The number of points to impute between successive observations. Note that as the transition horizon increases, more points may be required in order to get desirable acceptance rates for Brownian bridges. Note that some transition horizons may be removed from likelihood calculations - see \code{exclude}.}
-  \item{theta1}{Starting parameters for the drift parameters. }
-  \item{theta2}{Starting parameters for \eqn{sigma}.}
-  \item{prop.sds1}{Proposal standard deviations for the drift parameter chain where \code{theta1[i]_new ~ N(\code{theta1[i]_old},\code{prop.sds1[i]}) }}
-  \item{prop.sds2}{Proposal standard deviations for the volatility parameter chain where \code{theta2_new ~ N(\code{theta2_old},\code{prop.sds2}) }}
-  \item{transform}{An indicator assuming values 1, 2 or 3, for which of the predefined volatility structures to impose - see note \bold{[3]}.}
-  \item{N.updates}{The number of updates to perform.}
-  \item{exclude}{ Vector indicating which transitions to exclude from the analysis. Default = \code{NULL}.}
-  \item{bridge.plot}{Display imputed paths for successive updates - see note \bold{[4]}. Default = \code{FALSE}.}
+  \item{theta}{Starting parameters for the model process. }
+  \item{sds}{Proposal standard deviations for the drift parameter chain}
+  \item{diff.type}{An indicator assuming values 1, 2 or 3, for which of the predefined volatility structures to impose - see note \bold{[3]}.}
+  \item{burns}{The number of updates to burn (only affects traceplots).}
+  \item{updates}{The number of updates to perform.}
+  \item{imputation.plot}{Display imputed paths for successive updates - see note \bold{[4]}. Default = \code{FALSE}.}
   \item{plot.chain}{Display the resulting MCMC chain - see notes \bold{[5]}, \bold{[6]} and \bold{[7]}.}
+  \item{palette}{Colour palette for drawing trace plots. Default \code{palette = 'mono'}, otherwise a qualitative palette will be used.}
 }
 
-\details{
-}
 
 \value{
   \item{per.matrix}{Matrix containing the MCMC chain updates.}
@@ -78,28 +74,13 @@ Note that \code{theta} is a reserved variable for the parameters. It is left to 
 \seealso{\code{\link{BiRS.impute}}, \code{\link{MOL.density}}.}
 
 \examples{
-%\dontrun{
+\donttest{
 rm(list=ls(all=TRUE))
 #===============================================================================
 # Lets perform inference on a cubic diffusion with time varying modality.
 #===============================================================================
 
- # Load a simulated dataset.
- data(DoubleWell)
- x=DoubleWell
- plot(x$X_t~x$t,type='l') 
-
- # Define the drift function.
- mu=function(X,t,theta){theta[1]*X*(theta[2]+theta[3]*sin(2*pi*t/4)-X^2)}
-
- # Impute 50 points per transition.
- res=RS.impute(x$X_t,x$t,50,c(4,4,1),c(2),c(1,1,1)/10,c(0.01),N.updates=50000)
- comp=cbind(c(1,1,1,0.5),apply(res$per.matrix[10000:50000,],2,mean))
- colnames(comp) = c('True','Ests.')
- rownames(comp)=c(paste0('theta[',1:3,']'),paste0('sigma[',1,']'))
- print(data.frame(format(comp,digits=3)))
- 
 #-------------------------------------------------------------------------------
-%}
+}
 }
 

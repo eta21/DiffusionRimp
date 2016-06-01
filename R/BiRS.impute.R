@@ -1,8 +1,9 @@
-BiRS.impute=function (X, T.seq, M = 10, theta1 = c(4, 4, 4, 4), theta2 = c(2,2), prop.sds1 = c(0.5, 0.5, 0.5, 0.5), prop.sds2 = c(0.1,0.1), transform = c(1, 1), N.updates = 2000, exclude = NULL,bridge.plot = F, plot.chain = T)
+BiRS.impute=function (X, time, M, theta1,theta2,sds1,sds2,transform = c(1, 1),  burns = min(floor(updates/2),25000),updates, plot.chain = TRUE, imputation.plot = FALSE, palette = 'mono')
 {
+  exclude = NULL
   X1=X[,1]
   X2=X[,2]
-  d=diff(T.seq)
+  d=diff(time)
   dd=rep(d/(M),each=M)
   dddd=rep(d,each=M+1)
   N=length(X1)
@@ -13,7 +14,7 @@ BiRS.impute=function (X, T.seq, M = 10, theta1 = c(4, 4, 4, 4), theta2 = c(2,2),
   tt=rep((0:M)/M,N-1)
   lasts=seq(M+1,(N-1)*(M+1),by=M+1)
   firsts=seq(1,(M+1)*(N-1),by=M+1)
-  ttt=cumsum(c(T.seq[1],dd))
+  ttt=cumsum(c(time[1],dd))
 
   sgs1=c("sigma[1]","sigma[1]sqrt(X_t)","sigma[1]X_t")
   sgs2=c("sigma[2]","sigma[2]sqrt(Y_t)","sigma[2]Y_t")
@@ -28,7 +29,7 @@ BiRS.impute=function (X, T.seq, M = 10, theta1 = c(4, 4, 4, 4), theta2 = c(2,2),
   buffer7 = c("_______________________ Model/Chain Info _______________________")
   trim <- function (x) gsub("([[:space:]])", "", x)
   Info = c(buffer0, "Data Imputation", buffer0, buffer4, "",
-           trim(paste0(body("mux")[2])), trim(paste0(body("muy")[2])), buffer5,
+           trim(paste0(body("mu1")[2])), trim(paste0(body("mu2")[2])), buffer5,
            "", sgs1[transform[1]], sgs2[transform[2]], buffer6,
            "", prior.list, "")
   Info = data.frame(matrix(Info, length(Info), 1))
@@ -60,8 +61,8 @@ BiRS.impute=function (X, T.seq, M = 10, theta1 = c(4, 4, 4, 4), theta2 = c(2,2),
     h2=function(y2,sval){return(y2*sval)}
     likelihood2=function(XX1,XX2,theta,sval)
     {
-      mu1=(mux(XX1,XX2,ttt,theta)/sval[1])[-NN]
-      mu2=(muy(XX1,XX2,ttt,theta)/sval[2])[-NN]
+      mu1=(mu1(XX1,XX2,ttt,theta)/sval[1])[-NN]
+      mu2=(mu2(XX1,XX2,ttt,theta)/sval[2])[-NN]
       dY1t=diff(f1(XX1,sval[1]))
       dY2t=diff(f2(XX2,sval[2]))
       return(mu1*dY1t-0.5*(mu1^2)*dd+mu2*dY2t-0.5*(mu2^2)*dd)
@@ -76,8 +77,8 @@ BiRS.impute=function (X, T.seq, M = 10, theta1 = c(4, 4, 4, 4), theta2 = c(2,2),
     h2=function(y2,sval){return((y2*sval/2)^2)}
     likelihood2=function(XX1,XX2,theta,sval)
     {
-      mu1=(mux(XX1,XX2,ttt,theta)/sval[1])[-NN]
-      mu2=(((muy(XX1,XX2,ttt,theta)/sval[2]-sval[2]/4)/sqrt(XX2)))[-NN]
+      mu1=(mu1(XX1,XX2,ttt,theta)/sval[1])[-NN]
+      mu2=(((mu2(XX1,XX2,ttt,theta)/sval[2]-sval[2]/4)/sqrt(XX2)))[-NN]
       dY1t=diff(f1(XX1,sval[1]))
       dY2t=diff(f2(XX2,sval[2]))
       return(mu1*dY1t-0.5*(mu1^2)*dd+mu2*dY2t-0.5*(mu2^2)*dd)
@@ -92,8 +93,8 @@ BiRS.impute=function (X, T.seq, M = 10, theta1 = c(4, 4, 4, 4), theta2 = c(2,2),
     h2=function(y2,sval){return(y2*sval)}
     likelihood2=function(XX1,XX2,theta,sval)
     {
-      mu1=(((mux(XX1,XX2,ttt,theta)/sval[1]-sval[1]/4)/sqrt(XX1)))[-NN]
-      mu2=(muy(XX1,XX2,ttt,theta)/sval[2])[-NN]
+      mu1=(((mu1(XX1,XX2,ttt,theta)/sval[1]-sval[1]/4)/sqrt(XX1)))[-NN]
+      mu2=(mu2(XX1,XX2,ttt,theta)/sval[2])[-NN]
       dY1t=diff(f1(XX1,sval[1]))
       dY2t=diff(f2(XX2,sval[2]))
       return(mu1*dY1t-0.5*(mu1^2)*dd+mu2*dY2t-0.5*(mu2^2)*dd)
@@ -108,8 +109,8 @@ BiRS.impute=function (X, T.seq, M = 10, theta1 = c(4, 4, 4, 4), theta2 = c(2,2),
     h2=function(y2,sval){return(exp(y2*sval))}
     likelihood2=function(XX1,XX2,theta,sval)
     {
-      mu1=(mux(XX1,XX2,ttt,theta)/sval[1])[-NN]
-      mu2=(muy(XX1,XX2,ttt,theta)/(sval[2]*XX2)-sval[2]/2)[-NN]
+      mu1=(mu1(XX1,XX2,ttt,theta)/sval[1])[-NN]
+      mu2=(mu2(XX1,XX2,ttt,theta)/(sval[2]*XX2)-sval[2]/2)[-NN]
       dY1t=diff(f1(XX1,sval[1]))
       dY2t=diff(f2(XX2,sval[2]))
       return(mu1*dY1t-0.5*(mu1^2)*dd+mu2*dY2t-0.5*(mu2^2)*dd)
@@ -124,8 +125,8 @@ BiRS.impute=function (X, T.seq, M = 10, theta1 = c(4, 4, 4, 4), theta2 = c(2,2),
     h2=function(y2,sval){return(y2*sval)}
     likelihood2=function(XX1,XX2,theta,sval)
     {
-      mu1=(mux(XX1,XX2,ttt,theta)/(sval[1]*XX1)-sval[1]/2)[-NN]
-      mu2=(muy(XX1,XX2,ttt,theta)/sval[2])[-NN]
+      mu1=(mu1(XX1,XX2,ttt,theta)/(sval[1]*XX1)-sval[1]/2)[-NN]
+      mu2=(mu2(XX1,XX2,ttt,theta)/sval[2])[-NN]
       dY1t=diff(f1(XX1,sval[1]))
       dY2t=diff(f2(XX2,sval[2]))
       return(mu1*dY1t-0.5*(mu1^2)*dd+mu2*dY2t-0.5*(mu2^2)*dd)
@@ -140,8 +141,8 @@ BiRS.impute=function (X, T.seq, M = 10, theta1 = c(4, 4, 4, 4), theta2 = c(2,2),
     h2=function(y2,sval){return((y2*sval/2)^2)}
     likelihood2=function(XX1,XX2,theta,sval)
     {
-      mu1=(((mux(XX1,XX2,ttt,theta)/sval[1]-sval[1]/4)/sqrt(XX1)))[-NN]
-      mu2=(((muy(XX1,XX2,ttt,theta)/sval[2]-sval[2]/4)/sqrt(XX2)))[-NN]
+      mu1=(((mu1(XX1,XX2,ttt,theta)/sval[1]-sval[1]/4)/sqrt(XX1)))[-NN]
+      mu2=(((mu2(XX1,XX2,ttt,theta)/sval[2]-sval[2]/4)/sqrt(XX2)))[-NN]
       dY1t=diff(f1(XX1,sval[1]))
       dY2t=diff(f2(XX2,sval[2]))
       return(mu1*dY1t-0.5*(mu1^2)*dd+mu2*dY2t-0.5*(mu2^2)*dd)
@@ -156,8 +157,8 @@ BiRS.impute=function (X, T.seq, M = 10, theta1 = c(4, 4, 4, 4), theta2 = c(2,2),
     h2=function(y2,sval){return(exp(y2*sval))}
     likelihood2=function(XX1,XX2,theta,sval)
     {
-      mu1=(((mux(XX1,XX2,ttt,theta)/sval[1]-sval[1]/4)/sqrt(XX1)))[-NN]
-      mu2=(muy(XX1,XX2,ttt,theta)/(sval[2]*XX2)-sval[2]/2)[-NN]
+      mu1=(((mu1(XX1,XX2,ttt,theta)/sval[1]-sval[1]/4)/sqrt(XX1)))[-NN]
+      mu2=(mu2(XX1,XX2,ttt,theta)/(sval[2]*XX2)-sval[2]/2)[-NN]
       dY1t=diff(f1(XX1,sval[1]))
       dY2t=diff(f2(XX2,sval[2]))
       return(mu1*dY1t-0.5*(mu1^2)*dd+mu2*dY2t-0.5*(mu2^2)*dd)
@@ -172,8 +173,8 @@ BiRS.impute=function (X, T.seq, M = 10, theta1 = c(4, 4, 4, 4), theta2 = c(2,2),
     h2=function(y2,sval){return((y2*sval/2)^2)}
     likelihood2=function(XX1,XX2,theta,sval)
     {
-      mu1=(mux(XX1,XX2,ttt,theta)/(sval[1]*XX1)-sval[1]/2)[-NN]
-      mu2=((muy(XX1,XX2,ttt,theta)/sval[2]-sval[2]/4)/sqrt(XX2))[-NN]
+      mu1=(mu1(XX1,XX2,ttt,theta)/(sval[1]*XX1)-sval[1]/2)[-NN]
+      mu2=((mu2(XX1,XX2,ttt,theta)/sval[2]-sval[2]/4)/sqrt(XX2))[-NN]
       dY1t=diff(f1(XX1,sval[1]))
       dY2t=diff(f2(XX2,sval[2]))
       return(mu1*dY1t-0.5*(mu1^2)*dd+mu2*dY2t-0.5*(mu2^2)*dd)
@@ -189,8 +190,8 @@ BiRS.impute=function (X, T.seq, M = 10, theta1 = c(4, 4, 4, 4), theta2 = c(2,2),
     h2=function(y2,sval){return(exp(y2*sval))}
     likelihood2=function(XX1,XX2,theta,sval)
     {
-      mu1=(((mux(XX1,XX2,ttt,theta)/(sval[1]*XX1)-sval[1]/2)))[-NN]
-      mu2=(((muy(XX1,XX2,ttt,theta)/(sval[2]*XX2)-sval[2]/2)))[-NN]
+      mu1=(((mu1(XX1,XX2,ttt,theta)/(sval[1]*XX1)-sval[1]/2)))[-NN]
+      mu2=(((mu2(XX1,XX2,ttt,theta)/(sval[2]*XX2)-sval[2]/2)))[-NN]
       dY1t=diff(f1(XX1,sval[1]))
       dY2t=diff(f2(XX2,sval[2]))
       return(mu1*dY1t-0.5*(mu1^2)*dd+mu2*dY2t-0.5*(mu2^2)*dd)
@@ -200,15 +201,15 @@ BiRS.impute=function (X, T.seq, M = 10, theta1 = c(4, 4, 4, 4), theta2 = c(2,2),
 
 
   k   = rep(0,2)
-  kk  = matrix(0,2,N.updates)
+  kk  = matrix(0,2,updates)
   ba1 = rep(1,N-1)
   ba2 = ba1
-  ll  = rep(0,N.updates)
+  ll  = rep(0,updates)
   sss = 1:(length(X1)*M)
   ss  = seq(1,length(sss),by=M)
   lastss = seq(M,(M)*(N-1),by=M)
-  pers1  = matrix(0,length(theta1),N.updates)
-  pers2  = matrix(0,length(theta2),N.updates)
+  pers1  = matrix(0,length(theta1),updates)
+  pers2  = matrix(0,length(theta2),updates)
   pers1[,1] = theta1
   pers2[,1] = theta2
   n1 = length(theta1)
@@ -233,7 +234,7 @@ BiRS.impute=function (X, T.seq, M = 10, theta1 = c(4, 4, 4, 4), theta2 = c(2,2),
   #  exclude = N + 200
   #}
 
-  pb <- txtProgressBar(1, N.updates, 1, style = 3, width = 56)
+  pb <- txtProgressBar(1, updates, 1, style = 3, width = 56)
   tme = Sys.time()
   NN = length(X1.)
 
@@ -241,10 +242,10 @@ BiRS.impute=function (X, T.seq, M = 10, theta1 = c(4, 4, 4, 4), theta2 = c(2,2),
   ll[1] = llold.1
   tme = Sys.time()
 
-  for (i in 2:N.updates)
+  for (i in 2:updates)
   {
-    theta1.new=pers1[,i-1]+rnorm(n1,sd=prop.sds1)
-    sgnew=(pers2[,i-1]+rnorm(n2,sd=prop.sds2))
+    theta1.new=pers1[,i-1]+rnorm(n1,sd=sds1)
+    sgnew=(pers2[,i-1]+rnorm(n2,sd=sds2))
 
     measure1 = sum(dnorm(diff(f1(X1,sgnew[1]))/sqrt(d),log=T)-dnorm(diff(f1(X1,pers2[1,i-1]))/sqrt(d),log=T))
     measure2 = sum(dnorm(diff(f2(X2,sgnew[2]))/sqrt(d),log=T)-dnorm(diff(f2(X2,pers2[2,i-1]))/sqrt(d),log=T))
@@ -289,9 +290,9 @@ BiRS.impute=function (X, T.seq, M = 10, theta1 = c(4, 4, 4, 4), theta2 = c(2,2),
     llold.1=sum(likelihood2(h1(nu(f1(X1,pers2[1,i]),Z1.),pers2[1,i]),h2(nu(f2(X2,pers2[2,i]),Z2.),pers2[2,i]),pers1[,i],pers2[,i]))
     ll[i]=llold.1
 
-     if(bridge.plot)
+     if(imputation.plot)
     {
-      plot(X1[1:100]~T.seq[1:100],type="b",pch="+",col="red",ylim=c(-10,15))
+      plot(X1[1:100]~time[1:100],type="b",pch="+",col="red",ylim=c(-10,15))
       lines(h1(nu(f1(X1,pers2[1,i]),Z1.),pers2[1,i])~ttt,col="blue")
       points(X1.[endpts]~ttt[endpts],pch=19,col='purple')
       #Sys.sleep(1)
@@ -319,19 +320,21 @@ BiRS.impute=function (X, T.seq, M = 10, theta1 = c(4, 4, 4, 4), theta2 = c(2,2),
   tme = tme.eval(tme)
   homo = T
   homo.res = T
-  if (sum(round(diff(T.seq) - diff(T.seq)[1], 10) == 0) !=
-        length(T.seq) - 1) {
+  if (sum(round(diff(time) - diff(time)[1], 10) == 0) !=
+        length(time) - 1) {
     homo.res = F
   }
   homo = T
-  Info2 = c(buffer7, paste0("Chain Updates       : ", N.updates),
+  Info2 = c(buffer7, paste0("Chain Updates       : ", updates),
             paste0("Time Homogeneous    : ", c("Yes", "No")[2 - homo]),
-            paste0("Data Resolution     : ", c(paste0("Homogeneous: dt=",round(max(diff(T.seq)), 4)), paste0("Variable: min(dt)=",round(min(diff(T.seq)), 4), ", max(dt)=",round(max(diff(T.seq)), 4)))[2 - homo.res]), paste0("Imputed Resolution  : ",c(paste0("Homogeneous: dt=", round(max(diff(T.seq)/M),4)), paste0("Variable: min(dt)=", round(min(diff(T.seq)/M),4), ", max(dt)=", round(max(diff(T.seq)/M), 4)))[2 -homo.res]), paste0("Elapsed time        : ",tme), paste0("dim(theta)          : ", round(n1 +n2, 3)), buffer1)
+            paste0("Data Resolution     : ", c(paste0("Homogeneous: dt=",round(max(diff(time)), 4)), paste0("Variable: min(dt)=",round(min(diff(time)), 4), ", max(dt)=",round(max(diff(time)), 4)))[2 - homo.res]), paste0("Imputed Resolution  : ",c(paste0("Homogeneous: dt=", round(max(diff(time)/M),4)), paste0("Variable: min(dt)=", round(min(diff(time)/M),4), ", max(dt)=", round(max(diff(time)/M), 4)))[2 -homo.res]), paste0("Elapsed time        : ",tme), paste0("dim(theta)          : ", round(n1 +n2, 3)), buffer1)
   Info2 = data.frame(matrix(Info2, length(Info2), 1))
   colnames(Info2) = ""
   print(Info2, row.names = FALSE, right = F)
 
     acc=kk
+    if(plot.chain)
+    {
     nper=n1+n2
     d1=1:((n1+n2)+2)
     d2=d1
@@ -344,47 +347,53 @@ BiRS.impute=function (X, T.seq, M = 10, theta1 = c(4, 4, 4, 4), theta2 = c(2,2),
     d1=d1[col(test)[wh[1]]]
     d2=d2[row(test)[wh[1]]]
     par(mfrow=c(d1,d2))
-    cols=rainbow(nper)
+    if(palette=='mono')
+    {
+      cols =rep('#222299',nper)
+    }else{
+      cols=rainbow_hcl(nper, start = 10, end = 275,c=100,l=70)
+    }
     j=0
     for(i in 1:n1)
     {
       j=j+1
       plot(pers1[i,],col=cols[j],type="l",ylab="",
       xlab="Iteration",main=paste0("theta[",i,"]"))
-      abline(v=min(10000,N.updates/2),lty="dotdash")
+      abline(v=burns,lty="dotdash")
     }
     for(i in 1:n2)
     {
      j=j+1
      plot(pers2[i,],col=cols[j],type="l",ylab="",
      xlab="Iteration",main=paste0("sigma[",i,"]"))
-     abline(v=min(10000,N.updates/2),lty="dotdash")
+     abline(v=burns,lty="dotdash")
     }
    plot(acc[1,],type="n",col="blue",ylim=c(0,1),main="AcceptanceRates",xlab="Iteration",ylab="Rate")
-   polygon(c(0,length(acc[1,]),length(acc[1,]),0),c(0.4,0.4,0,-0),col="lightblue",border=NA)
+   #polygon(c(0,length(acc[1,]),length(acc[1,]),0),c(0.4,0.4,0,-0),col="lightblue",border=NA)
    #polygon(c(0,length(acc[1,]),length(acc[1,]),0),c(1,1,0.6,0.6),col="lightgreen",border=NA)
    lines(acc[1,],type="l",col="darkblue")
    lines(acc[2,],type="l",col="darkgreen")
    abline(h=seq(0,1,1/10),lty="dotted")
-   plot(ba1/N.updates,pch=4,col=4,ylim=c(0,1),type="n",
+   plot(ba1/updates,pch=4,col=4,ylim=c(0,1),type="n",
    main=paste("BBAcceptanceRates(M=",M,")"),xlab="Transition",ylab="Rate")
-   polygon(c(0,length(ba1/N.updates),length(ba1/N.updates),0),c(1,1,0.8,0.8),col="lightblue",border=NA)
-   points(ba1/N.updates,pch="-",col=4)
-   points(ba2/N.updates,pch="-",col=3)
+   polygon(c(0,length(ba1/updates),length(ba1/updates),0),c(1,1,0.8,0.8),col="lightblue",border=NA)
+   points(ba1/updates,pch="-",col=4)
+   #points(ba2/updates,pch="-",col=3)
    abline(h=seq(0,1,1/10),lty="dotted")
    abline(h=c(0.6),lty="dashed",col="red",lwd=1.2)
-   if(any(ba1/N.updates<0.6))
+   if(any(ba1/updates<0.6))
   {
-    wh=which((ba1/N.updates)<0.6)
-    text((ba1/N.updates)[wh]~wh,labels=wh,pch=0.5,pos=1)
+    wh=which((ba1/updates)<0.6)
+    text((ba1/updates)[wh]~wh,labels=wh,pch=0.5,pos=1)
   }
-  if(any(ba2/N.updates<0.6))
+  if(any(ba2/updates<0.6))
  {
-    wh=which((ba2/N.updates)<0.6)
-    text((ba2/N.updates)[wh]~wh,labels=wh,pch=0.5,pos=1)
+    wh=which((ba2/updates)<0.6)
+    text((ba2/updates)[wh]~wh,labels=wh,pch=0.5,pos=1)
  }
  #abline(v=exclude,col="grey75",lty="dashed")
  #mtext(exclude,side=1,cex=0.5,at=exclude)
+ }
  theta=rbind(pers1,pers2)
- return(list(per.matrix=t(theta),acceptence.rate=t(acc),bridge.rate=cbind(ba1/N.updates,ba2/N.updates),run.time=tme))
+ return(list(per.matrix=t(theta),acceptence.rate=t(acc),bridge.rate=cbind(ba1/updates,ba2/updates),run.time=tme))
 }

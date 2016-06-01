@@ -1,1 +1,14 @@
+useDynLib(DiffusionRimp)
+importFrom(Rcpp, evalCpp)
 exportPattern("^[[:alpha:]]+")
+importFrom("grDevices", "colorRampPalette", "rainbow")
+importFrom("graphics", "abline", "box", "filled.contour", "hist",
+             "lines", "par", "persp", "plot",  "axis")
+importFrom("stats", "acf", "cor", "dnorm", "na.omit", "optim",
+             "quantile", "rnorm", "runif", "dgamma")
+importFrom("utils", "alarm", "flush.console", "setTxtProgressBar",
+             "txtProgressBar")
+importFrom("Rcpp", "sourceCpp")
+importFrom("RcppArmadillo", "armadillo_set_seed")
+importFrom("rgl", "persp3d","open3d","play3d","spin3d")
+importFrom("colorspace", "rainbow_hcl","sequential_hcl")

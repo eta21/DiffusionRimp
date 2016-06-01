@@ -19,13 +19,9 @@ with \bold{\eqn{X_0 = 1}} and \bold{\eqn{Y_0 = 1}}.}
     \item{\code{t}}{A numeric vector of time nodes at which the simulated data were observed.}
   }
 }
-\details{
-}
-\source{
-}
-\references{
-}
 \examples{
+\donttest{
 data(TiCIR)
+}
 }
 \keyword{datasets}

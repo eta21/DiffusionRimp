@@ -1,0 +1,16 @@
+citHeader("To cite DiffusionRimp in publications use:")
+
+citEntry(entry = "Manual",
+  title        = "Diffusion{R}imp: Inference and Analysis for Diffusion Processes via Data Imputation and Method of Lines.",
+  author       = personList(as.person("Etienne A D Pienaar"),
+                   as.person("Melvin M Varughese")),
+  year         = "2015",
+  note         = "R package version 0.1.0",
+  url          = "https://CRAN.R-project.org/package=DiffusionRimp",
+  textVersion  =
+  paste("Etienne A. D. Pienaar, Melvin M. Varughese (2015).",
+        "DiffusionRimp: Inference and Analysis for Diffusion Processes via Data Imputation and Method of Lines.",
+        "R package version 0.1.0. https://CRAN.R-project.org/package=DiffusionRimp.")
+)
+
+

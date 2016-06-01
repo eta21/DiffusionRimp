@@ -1,12 +1,53 @@
-BiMOL.density=function(Xs,Ys,s=0,t=2,xlims,ylims,N=31,delt=1/100,final.only=F,show.lattice =T)
+BiMOL.density=function(Xs,Ys,s,t,xlims,ylims,N ,delt ,mu1,mu2,sig11,sig12,sig21,sig22,final.only=FALSE,show.lattice =FALSE)
 {
-  
+   if((missing(mu1)&&missing(mu2)&&missing(sig11)&&missing(sig12)&&missing(sig21)&&missing(sig22)))
+  {
+
+    namess=c('mu1','mu2','sig11','sig12','sig21','sig22')
+    namess2=c('muu1','muu2','sigg11','sigg12','sigg21','sigg22')
+    txt =rep('+matrix(0,dim(X)[1],dim(Y)[2])',6)
+    func.list=rep(0,length(namess))
+    obs=objects(pos=1)
+    muu1   =function(X,Y,t){}
+    muu2   =function(X,Y,t){}
+    sigg11 =function(X,Y,t){}
+    sigg12 =function(X,Y,t){}
+    sigg21 =function(X,Y,t){}
+    sigg22 =function(X,Y,t){}
+    for(i in 1:length(namess))
+    {
+      if(sum(obs==namess[i]))
+      {
+        txt[i] = paste0(body(namess[i])[2],txt[i])
+      }
+    }
+    body(muu1)    =  parse(text=txt[1])
+    body(muu2)    =  parse(text=txt[2])
+    body(sigg11)  =  parse(text=txt[3])
+    body(sigg12)  =  parse(text=txt[4])
+    body(sigg21)  =  parse(text=txt[5])
+    body(sigg22)  =  parse(text=txt[6])
+   }else
+   {
+    muu1   =function(X,Y,t){}
+    muu2   =function(X,Y,t){}
+    sigg11 =function(X,Y,t){}
+    sigg12 =function(X,Y,t){}
+    sigg21 =function(X,Y,t){}
+    sigg22 =function(X,Y,t){}
+     body(muu1) =  parse(text=paste0(mu1,'+matrix(0,dim(X)[1],dim(Y)[2])'))
+     body(muu1) =  parse(text=paste0(mu1,'+matrix(0,dim(X)[1],dim(Y)[2])'))
+     body(sigg11) =  parse(text=paste0(sig11,'+matrix(0,dim(X)[1],dim(Y)[2])'))
+     if(!missing(sigg12)){body(sigg12) =  parse(text=paste0(sig12,'+matrix(0,dim(X)[1],dim(Y)[2])'))}
+     if(!missing(sigg21)){body(sigg21) =  parse(text=paste0(sig21,'+matrix(0,dim(X)[1],dim(Y)[2])'))}
+     body(sigg22) =  parse(text=paste0(sig22,'+matrix(0,dim(X)[1],dim(Y)[2])'))
+   }
   f=function(U,tme)
   {
-    MU1= mu1(XX1,XX2,tme)*U
-    MU2= mu2(XX1,XX2,tme)*U
-    SU1= sig1(XX1,XX2,tme)^2*U
-    SU2= sig2(XX1,XX2,tme)^2*U
+    MU1= muu1(XX1,XX2,tme)*U
+    MU2= muu2(XX1,XX2,tme)*U
+    SU1= sigg11(XX1,XX2,tme)^2*U
+    SU2= sigg22(XX1,XX2,tme)^2*U
     D1 = (MU1[-c(1,2),-c(1,N)]-MU1[-c(N-1,N),-c(1,N)])/dx1/2
     D2 = (MU2[-c(1,N),-c(1,2)]-MU2[-c(1,N),-c(N-1,N)])/dx2/2
     D3 =  1/2*((SU1[-c(1,N),-c(1,2)]-2*SU1[-c(1,N),-c(1,N)]+SU1[-c(1,N),-c(N-1,N)]))/dxx1
@@ -149,5 +190,7 @@ BiMOL.density=function(Xs,Ys,s=0,t=2,xlims,ylims,N=31,delt=1/100,final.only=F,sh
   {
      MM=M
   }
-  return(list(density=MM/dx1/dx2,X=xx1,Y=xx2,time=seq(s,t,delt)))
+  ret =(list(density=MM/dx1/dx2,Xt=xx1,Yt=xx2,time=seq(s,t,delt)))
+  class(ret) = 'BiMOL.density'
+  return(ret)
 }

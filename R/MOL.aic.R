@@ -1,5 +1,8 @@
-MOL.likelihood=function(X,time,delt,xlims,N=31,theta=c(0),plt=T,wrt=F)
+globalVariables(c('mu','sig'))
+MOL.aic=function(X, time, delt, xlims,N ,theta ,plt = TRUE, wrt = FALSE)
 {
+    solver   =function(Xs, Xt, theta, N , delt , N2, tt  , P , alpha, lower , upper, tro  ){}
+  rm(list =c('solver'))
   topmatter='
   #include <RcppArmadillo.h>
   #include <math.h>
@@ -15,22 +18,22 @@ MOL.likelihood=function(X,time,delt,xlims,N=31,theta=c(0),plt=T,wrt=F)
 }
   '
   m1='
-  vec mu(vec x,double t,vec theta)
+  vec mu(vec X,double t,vec theta)
 {
-  vec res='
+  vec res=0*X+'
   
   s11=';
   return(res);
 }
-  vec sig(vec x,double t,vec theta)
+  vec sig(vec X,double t,vec theta)
 {
-  vec res=0*x+'
+  vec res=0*X+'
   
   
   
   fsolver=
     ';
-  return(res);
+  return(pow(res,2));
 }
   // [[Rcpp::export]]
   vec f(vec y,vec x,double t,double hh,int N,vec theta)
@@ -73,8 +76,7 @@ MOL.likelihood=function(X,time,delt,xlims,N=31,theta=c(0),plt=T,wrt=F)
   '
   
   txt=paste0(topmatter,m1,body('mu')[2],s11,body('sig')[2],fsolver)
-  library(Rcpp)
-  library(RcppArmadillo)
+
   sourceCpp(code=txt)
   if(wrt){write(txt,'MOL.likelihood.cpp')}
   M=length(X)
@@ -100,13 +102,13 @@ MOL.likelihood=function(X,time,delt,xlims,N=31,theta=c(0),plt=T,wrt=F)
     if(plt)
     {
       par(mfrow=c(1,2))
-      plot(X~time,type='l',main='Data',xlab='Time',ylab='State')
-      abline(v=(time[i+1]-time[i])/2+time[i],col='red',lwd=2)
-      plot(res~x,type='l')
-      abline(v=X[i+1],col='grey85',lwd=2,lty='dashed')
-      points(exp(vals[i])~X[i+1],pch=21,bg='red')
+      plot(X~time,type='l',main='Time Series',xlab='Time (t)',ylab='X_t',col='#BBCCEE')
+      abline(v=(time[i+1]-time[i])/2+time[i],col='darkblue',lwd=1,lty='dashed')
+      plot(res~x,type='l',main='Density',col='#222299',xlab=substitute(X[t[i]],list(i=i+1)),ylab = 'Density')
+      abline(v=X[i+1],col='darkblue',lwd=1,lty='dashed')
+      points(exp(vals[i])~X[i+1],pch=21,bg='darkblue')
       axis(1,at=x,labels=NA,tcl=-0.25)
     }
   }
-  return(list(likelihood=vals,density=res,Xt=x))
+  return(list(AIC = -2*sum(vals)+2*length(theta),likelihood=vals,p = length(theta)))
 }

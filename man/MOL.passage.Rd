@@ -7,7 +7,7 @@ For scalar diffusions with drift \code{mu=function(X){}} and diffusion \code{sig
 }
 
 \usage{
-MOL.passage(Xs, t, xlims, N = 51, delt = 1/500, desc = 1)
+MOL.passage(Xs, t, barriers, N, delt, mu, sig, desc = 1)
 }
 
 \arguments{
@@ -16,11 +16,9 @@ MOL.passage(Xs, t, xlims, N = 51, delt = 1/500, desc = 1)
   \item{barriers}{Limits for the spatial nodes of the lattice. These limits now represent the barriers in the spatial domain (see note \bold{[2]}).}
   \item{N}{The number of nodes in the spatial domain at which to evaluate the transitional density. Increase \code{N} for more accurate approximations (see note \bold{[3]} and warning \bold{[2]}).}
   \item{delt}{Step size for the time domain of the lattice (see note \bold{[4]}).}
+   \item{mu}{Optional (if drift and diffusion coefficients are already defined) arguments giving the drift and diffusion coefficients as text expressions (See \bold{Interface} below).}
+   \item{sig}{Optional (if drift and diffusion coefficients are already defined) arguments giving the drift and diffusion coefficients as text expressions (See \bold{Interface} below).}
   \item{desc}{The type of discretization used (see note \bold{[5]}). }
-}
-
-\details{
-DETAILS ABOUT THE METHODOLOGY
 }
 
 \value{
@@ -30,7 +28,6 @@ DETAILS ABOUT THE METHODOLOGY
 }
 
 \references{
-DANIELS!!!!!!
 
 Hamdi, S., Schiesser, W. E. and Griffiths, G. W. 2007 Method of lines. \emph{Scholarpedia}, \bold{2(7)}:2859.
 Revision #124335.
@@ -73,59 +70,22 @@ further analysis may be conducted by calling the function \code{MOL.passage()}.
 \seealso{\code{\link{MOL.density}}, \code{\link{BiMOL.density}}.}
 
 \examples{
-%\dontrun{
+\donttest{
 #===============================================================================
-# Simulate a two-barrier problem and compare the approximate FPT density.
-# NOTE: THE SIMULATED FPTs ARE NOT BIAS CORRECTED!!! First passage times are 
-#       over estimated!
+# Calculate an approximate FPT density for a cubic diffusion confined to
+# a finite strip.
+# Given dXt = 0.5Xt(1-Xt^2)dt+0.5dBt with X0 = 0.5, approximate the first passage
+# time density to the boundaries [-0.5,2].
 #===============================================================================
-  
-  rm(list=ls(all=TRUE))
-  mu=function(X){(0.5*X*(1-X^2))}
-  sig=function(X){0.5+0*X}
 
-  simulate=function(Xs,Lt,Ut,N=10000,delt=1/1000)
-  {
-    X=rep(Xs,N)
-    t=0
-    k=1
-    times=X*0
-    while(N>=1)
-    {
-       X=X+mu(X)*delt+sig(X)*rnorm(N,sd=sqrt(delt))
-       t=t+delt
-       if(any((X<Lt)|(X>Ut)))
-       {
-          wh=which((X>Lt)&(X<Ut))
-          X=X[wh]
-          Nnew=length(X)
-          d=N-Nnew
-          times[k:(k+d)]=t
-          k=k+d+1
-          N=Nnew
-       }
-    }
-    return(list(times=times))
-  }
+  mu  <- function(X){(0.5*X*(1-X^2))}
+  sig <- function(X) {0.5}
+  res.PDE <- MOL.passage(Xs=0.5,t=10,barriers=c(-0.5,2),N=51,delt=1/250)
+  MOL.plot(res.PDE)
   
-  res.SIM=simulate(0.5,-0.5,2,25000,1/1000)
-  x11()
-  par(ask=F)
-  res.PDE=MOL.passage(Xs=0.5,t=20,barriers=c(-0.5,2),N=51,delt=1/1000,1)
-  library(rgl)
-  persp3d(res.PDE$X,res.PDE$time,res.PDE$surface,theta=125,
-  xlab='X_t',ylab='Time',zlab='Survival Probability',
-  col='green')
-  
+  plot(res.PDE$density~res.PDE$time, col ='#222299',type='l',
+       main = 'First passage time density')
 
-  cols=colorRampPalette(c('blue','green','yellow','red'))
-  levels=51
-  filled.contour(res.PDE$time,res.PDE$X,t(res.PDE$surface),col=cols(levels+1),
-  nlevels=levels ,xlab='Time',ylab='X_s',main='Survival Probability')
- 
-  hist(res.SIM$times,breaks=50,col='darkblue',freq=F,ylim=range(res.PDE$density))
-  lines(res.PDE$density~res.PDE$time,type='l')
-  
 #-------------------------------------------------------------------------------
-%}
+}
 }

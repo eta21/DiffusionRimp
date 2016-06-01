@@ -1,5 +1,10 @@
-BiMOL.likelihood=function(X,Y,time,delt,xlims,ylims,N=31,theta=c(0),plt=T,wrt=F)
+globalVariables(c('mu1','mu2','sig11','sig12','sig21','sig22'))
+BiMOL.aic=function(X,time,delt,xlims,ylims,N ,theta , plt=TRUE, wrt= FALSE)
 {
+  Y =  X[,2]
+  X =  X[,1]
+   solver   =function(Xs, Xt, theta, N , delt , N2, tt  , P , alpha, lower , upper, tro  ){}
+  rm(list =c('solver'))
   topmatter='
   #include <RcppArmadillo.h>
   #include <math.h>
@@ -91,11 +96,11 @@ BiMOL.likelihood=function(X,Y,time,delt,xlims,ylims,N=31,theta=c(0),plt=T,wrt=F)
 }
   '
   
-  txt=paste0(topmatter,m1,body('mux')[2],m2,body('muy')[2],s11,body('sig11')[2],s22,body('sig22')[2],fsolver)
-  library(Rcpp)
-  library(RcppArmadillo)
+  txt=paste0(topmatter,m1,body('mu1')[2],m2,body('mu2')[2],s11,body('sig11')[2],s22,body('sig22')[2],fsolver)
+  #library(Rcpp)
+  #library(RcppArmadillo)
   sourceCpp(code=txt)
-  if(wrt){write(txt,'BiMOL.cpp')}
+  if(wrt){write(txt,'BiMOL.likelihood.cpp')}
   M=length(X)
   vals=rep(0,M-1)
   if(plt)
@@ -132,10 +137,9 @@ BiMOL.likelihood=function(X,Y,time,delt,xlims,ylims,N=31,theta=c(0),plt=T,wrt=F)
     A = (xu-X[i+1])/(xu-xl)*log(res[whminx,whminy])+(X[i+1]-xl)/(xu-xl)*log(res[whmaxx,whminy])
     B = (xu-X[i+1])/(xu-xl)*log(res[whminx,whmaxy])+(X[i+1]-xl)/(xu-xl)*log(res[whmaxx,whmaxy])
     vals[i] =(yu-Y[i+1])/(yu-yl)*A+(Y[i+1]-yl)/(yu-yl)*B
-    #vals[i] = log(res[whmin])+(X[i+1]-x[whmin])/(x[whmax]-x[whmin])*(log(res[whmax])-log(res[whmin]))
+
     if(plt)
     {
-      
       plot(X~time,col='blue',type='l',main='Data',xlab='Time',ylab='State',ylim=range(c(X,Y)))
       lines(Y~time,col='green')
       abline(v=(time[i+1]-time[i])/2+time[i],col='red',lwd=2)
@@ -144,5 +148,5 @@ BiMOL.likelihood=function(X,Y,time,delt,xlims,ylims,N=31,theta=c(0),plt=T,wrt=F)
       Sys.sleep(0.1)
     }
   }
-  return(list(likelihood=vals,density=res,Xt=x,Yt=y))
+  return(list(AIC = -2*sum(vals)+2*length(theta),likelihood=vals,p = length(theta)))
 }

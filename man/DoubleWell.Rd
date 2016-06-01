@@ -16,17 +16,11 @@ with \bold{\eqn{X_0 = 1}}.}
     \item{\code{t}}{Time points at which the diffusion was observed.}
   }
 }
-\details{
-%%  ~~ If necessary, more details than the __description__ above ~~
-}
-\source{
-%%  ~~ reference to a publication or URL from which the data were obtained ~~
-}
-\references{
-%%  ~~ possibly secondary sources and usages ~~
-}
+
 \examples{
+\donttest{
 data(DoubleWell) 
 plot(rev(DoubleWell),type='l') 
+}
 }
 \keyword{datasets}
