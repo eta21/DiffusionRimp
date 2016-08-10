@@ -6,10 +6,8 @@
 * There were no ERRORs or WARNINGs.
 * There was one NOTE:
 ```
-  installed size is  Mb
-  sub-directories of 1Mb or more:
-    doc    Mb
-    libs   Mb
+* checking CRAN incoming feasibility ... NOTE
+Maintainer: 'Etienne A.D. Pienaar <etiennead@gmail.com>'
 ```
 * PDF version of manual was OK.
 

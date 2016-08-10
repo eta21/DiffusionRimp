@@ -1,8 +1,21 @@
 globalVariables(c('mu1','mu2','sig11','sig12','sig21','sig22'))
-BiMOL.aic=function(X,time,delt,xlims,ylims,N ,theta , plt=TRUE, wrt= FALSE)
+BiMOL.aic=function(X,time,delt,xlims,ylims,N ,theta , diff.type,plt=TRUE, wrt= FALSE, border = NA)
 {
   Y =  X[,2]
   X =  X[,1]
+  if(!missing(diff.type))
+  {
+    #print('yeah')
+    sig11 = function(x,y,t){}
+    sig22 = function(x,y,t){}
+    if(diff.type[1] == 1){body(sig11) = parse(text=paste0('(theta[',length(theta)-1,'])'))}
+    if(diff.type[1] == 2){body(sig11) = parse(text=paste0('(theta[',length(theta)-1,']*sqrt(X))'))}
+    if(diff.type[1] == 3){body(sig11) = parse(text=paste0('(theta[',length(theta)-1,']*X)'))}
+    if(diff.type[2] == 1){body(sig22) = parse(text=paste0('(theta[',length(theta),'])'))}
+    if(diff.type[2] == 2){body(sig22) = parse(text=paste0('(theta[',length(theta),']*sqrt(Y))'))}
+    if(diff.type[2] == 3){body(sig22) = parse(text=paste0('(theta[',length(theta),']*Y)'))}
+    #print(body(sig)[2])
+  }
    solver   =function(Xs, Xt, theta, N , delt , N2, tt  , P , alpha, lower , upper, tro  ){}
   rm(list =c('solver'))
   topmatter='
@@ -20,35 +33,35 @@ BiMOL.aic=function(X,time,delt,xlims,ylims,N ,theta , plt=TRUE, wrt= FALSE)
 }
   '
   m1='
-  mat mu1(mat x,mat y,double t,vec theta)
+  mat mu1(mat X,mat Y,double t,vec theta)
 {
-  mat res='
+  mat res=0*X+'
   
   m2=';
   return(res);
 }
-  mat mu2(mat x,mat y,double t,vec theta)
+  mat mu2(mat X,mat Y,double t,vec theta)
 {
-  mat res='
+  mat res=0*X+'
   
   s11=';
   return(res);
 }
   
-  mat sig11(mat x,mat y,double t,vec theta)
+  mat sig11(mat X,mat Y,double t,vec theta)
 {
-  mat res=0*x+'
+  mat res=0*X+'
   s22=';
-  return(res);
+  return(pow(res,2));
 }
   
-  mat sig22(mat x,mat y,double t,vec theta)
+  mat sig22(mat X,mat Y,double t,vec theta)
 {
-  mat res=0*y+'
+  mat res=0*Y+'
   
   fsolver=
     ';
-  return(res);
+  return(pow(res,2));
 }
   // [[Rcpp::export]]
   mat f(mat z,mat x,mat y,double t,double hh,int N,vec theta)
@@ -105,7 +118,7 @@ BiMOL.aic=function(X,time,delt,xlims,ylims,N ,theta , plt=TRUE, wrt= FALSE)
   vals=rep(0,M-1)
   if(plt)
   {
-    par(mfrow=c(1,2))
+    par(mfrow=c(1,1))
   }
   for(i in 1:(M-1))
   {
@@ -140,11 +153,14 @@ BiMOL.aic=function(X,time,delt,xlims,ylims,N ,theta , plt=TRUE, wrt= FALSE)
 
     if(plt)
     {
-      plot(X~time,col='blue',type='l',main='Data',xlab='Time',ylab='State',ylim=range(c(X,Y)))
-      lines(Y~time,col='green')
-      abline(v=(time[i+1]-time[i])/2+time[i],col='red',lwd=2)
-      ress=persp(x,y,res,col='steelblue',phi=30,theta=45,box=F,main='Density', ticktype = "detailed")
+      #plot(X~time,col='#222299',type='l',main='Time Series',xlab='Time',ylab='State',ylim=range(c(X,Y)))
+      #lines(Y~time,col='#BBCCEE')
+      #abline(v=(time[i+1]-time[i])/2+time[i],col='darkblue',lwd=1,lty='dashed')
+      ress=persp(x,y,res,col='white',main='Density',box=T, xlab='X_t', ylab='Y_t', zlab='Density', shade=0.8, r = sqrt(0.8),phi=30, theta=145, border = border)
       points(trans3d(X[i+1], Y[i+1], exp(vals[i]), pmat = ress), bg = 'red', pch = 21)
+      
+      #points(trans3d(x, y, exp(diag(res)), pmat = ress), pch = 21)
+      legend('topright',bty='n',pch = 21, pt.bg ='red',legend = substitute(list(X[t[i]],Y[t[i]]),list(i=i+1)))
       Sys.sleep(0.1)
     }
   }

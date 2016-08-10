@@ -92,31 +92,12 @@ further analysis may be conducted by calling the function \code{BiMOL.density()}
 \examples{
 \donttest{
 #===============================================================================
-# Bi-cubic diffusion with oscillating spin.
+
+ # For detailed notes and examples on how to use the BiMOL.density() function, see
+ # the following vignette:
+
+ RShowDoc('Part_2_Transition_Densities',type='html','DiffusionRimp')
+
 #===============================================================================
-
- # Define drift and diffusion terms:
- mu1   <- function(X,Y,t){X*(1-X^2)+sin(2*pi*t/4)*Y}
- mu2   <- function(X,Y,t){Y*(1-Y^2)-sin(2*pi*t/4)*X}
- sig11 <- function(X,Y,t){0.5}
- sig22 <- function(X,Y,t){0.5}
-
- # Parameters of the problem:
- Xs     <- 1            # Starting X-coordinate
- Ys     <- 1            # Starting Y-coordinate
- s      <- 0            # Starting time
- t      <- 15           # Final horizon time
- Xlim   <- c(-2.2, 2.2) # Lattice endpoints in X dim
- Ylim   <- c(-2.2, 2.2) # Lattice endpoints in Y dim
- Nodes  <- 51           # How many nodes (incl. ends)
- delt   <- 1/100        # Time stepsize
- 
- # Run the Method of Lines:
- res <- BiMOL.density(Xs, Ys, s, t, Xlim, Ylim, Nodes, delt)
- 
- # Plot the density
- MOL.plot(res)
- 
-#-------------------------------------------------------------------------------
 }
 }

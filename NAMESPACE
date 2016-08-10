@@ -1,9 +1,10 @@
 useDynLib(DiffusionRimp)
 importFrom(Rcpp, evalCpp)
 exportPattern("^[[:alpha:]]+")
-importFrom("grDevices", "colorRampPalette", "rainbow")
+importFrom("grDevices", "colorRampPalette", "rainbow", "trans3d")
 importFrom("graphics", "abline", "box", "filled.contour", "hist",
-             "lines", "par", "persp", "plot",  "axis")
+             "lines", "par", "persp", "plot",  "axis","legend", 
+            "points", "polygon", "segments", "text")
 importFrom("stats", "acf", "cor", "dnorm", "na.omit", "optim",
              "quantile", "rnorm", "runif", "dgamma")
 importFrom("utils", "alarm", "flush.console", "setTxtProgressBar",

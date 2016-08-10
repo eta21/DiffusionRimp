@@ -1,6 +1,7 @@
 
-BiMOL.passage=function(Xs,Ys,t,barriers,N,delt,mu1,mu2,sig11,sig12,sig21,sig22,desc=1)
+BiMOL.passage=function(Xs,Ys,t,limits,N,delt,mu1,mu2,sig11,sig12,sig21,sig22,desc=1,Phi, plt = FALSE)
 {
+  
   if((missing(mu1)&&missing(mu2)&&missing(sig11)&&missing(sig12)&&missing(sig21)&&missing(sig22)))
   {
 
@@ -43,9 +44,22 @@ BiMOL.passage=function(Xs,Ys,t,barriers,N,delt,mu1,mu2,sig11,sig12,sig21,sig22,d
      if(!missing(sigg21)){body(sigg21) =  parse(text=paste0(sig21,'+matrix(0,dim(X)[1],dim(Y)[2])'))}
      body(sigg22) =  parse(text=paste0(sig22,'+matrix(0,dim(X)[1],dim(Y)[2])'))
    }
-  xx1=seq(barriers[1],barriers[2],length=N)
-  xx2=seq(barriers[3],barriers[4],length=N)
+  xx1=seq(limits[1],limits[2],length=N)
+  xx2=seq(limits[3],limits[4],length=N)
 
+  IncMat =matrix(1,N,N)
+  IncMat[c(1,N),] = 0
+  IncMat[,c(1,N)] = 0
+  if(!missing(Phi))
+  {
+    if(plt){plot(1,1,type='n',xlim = range(xx1),ylim=range(xx2))}
+    IncMat = IncMat * 0
+    for(i in 1:N){for(j in 1:N)
+    {
+      IncMat[i,j] = Phi(xx1[i],xx2[j]);
+      if(plt){points(xx1[i],xx2[j],col=c('white','black')[Phi(xx1[i],xx2[j])+1],pch = 20)}}}
+  }
+  
   dx1=diff(xx1)[1]
   dxx1=dx1^2
   dx2=diff(xx2)[1]
@@ -64,7 +78,7 @@ BiMOL.passage=function(Xs,Ys,t,barriers,N,delt,mu1,mu2,sig11,sig12,sig21,sig22,d
     D3 =  1/2*SU1[-c(1,N),-c(1,N)]*((U[-c(1,N),-c(1,2)]-2*U[-c(1,N),-c(1,N)]+U[-c(1,N),-c(N-1,N)]))/dxx1
     D4 =  1/2*SU2[-c(1,N),-c(1,N)]*((U[-c(1,2),-c(1,N)]-2*U[-c(1,N),-c(1,N)]+U[-c(N-1,N),-c(1,N)]))/dxx2
     MMM1=+D1+D2+D3+D4
-    return(cbind(0,rbind(0,MMM1,0),0))
+    return(IncMat*cbind(0,rbind(0,MMM1,0),0))
   }
 
   M=matrix(1,N,N)
@@ -72,10 +86,10 @@ BiMOL.passage=function(Xs,Ys,t,barriers,N,delt,mu1,mu2,sig11,sig12,sig21,sig22,d
   M[,1]=0
   M[N,]=0
   M[,N]=0
-  
+  M = M*IncMat
   N.mesh=round((t-0)/delt)+1
   MM = array(0,dim=c(N,N,N.mesh))
-  MM[,,1]=M
+  MM[,,1]=M*IncMat
   ttt=0
 
   t.alpha=

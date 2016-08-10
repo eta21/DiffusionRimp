@@ -1,7 +1,7 @@
 
-MOL.passage=function(Xs,t,barriers,N,delt,mu,sig,desc=1)
+MOL.passage=function(Xs,t,limits,N,delt,mu,sig,desc=1)
 {
-  xx1=seq(barriers[1],barriers[2],length=N)
+  xx1=seq(limits[1],limits[2],length=N)
   dx1=diff(xx1)[1]
   dxx1=dx1^2
      if((missing(mu)&&missing(sig)))

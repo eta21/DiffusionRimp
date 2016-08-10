@@ -74,6 +74,7 @@ Using the various routines of the __DiffusionRimp__ package, we can analyse simi
 * More Vignettes:
     + [Introduction](Part_1_Introduction.html)
     + [Transitional densities](Part_2_Transition_Densities.html)
+    + [First passage time problems](Part_3_First_Passage_Times.html)
     + Or use:
 ```{r,eval=FALSE}
 browseVignettes('DiffusionRimp')

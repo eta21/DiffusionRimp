@@ -9,8 +9,7 @@ citEntry(entry = "Manual",
   url          = "https://CRAN.R-project.org/package=DiffusionRimp",
   textVersion  =
   paste("Etienne A. D. Pienaar, Melvin M. Varughese (2015).",
-        "DiffusionRimp: Inference and Analysis for Diffusion Processes via Data Imputation and Method of Lines.",
-        "R package version 0.1.0. https://CRAN.R-project.org/package=DiffusionRimp.")
+        "DiffusionRimp: Inference and Analysis for Diffusion Processes via Data Imputation and Method of Lines.  R package version 0.1.2. https://CRAN.R-project.org/package=DiffusionRimp.")
 )
 
 

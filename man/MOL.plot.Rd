@@ -31,7 +31,6 @@ Updates available on GitHub at \url{https://github.com/eta21}.
 \examples{
   \donttest{
 #===============================================================================
-
   }
 }
 \keyword{plot}

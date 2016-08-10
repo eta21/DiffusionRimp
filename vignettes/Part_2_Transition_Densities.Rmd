@@ -23,6 +23,15 @@ vignette: >
 # Examples
 
 ## Cubic diffusion with unimodal transition density 
+Consider a diffusion process with dynamics given by the SDE:
+\[
+dX_t = -X_t^3dt + dB_t.
+\]
+Here, the drift term $\mu(X_t,t) = - X_t^3$ operates as a mean-reverting term, pulling the process towards the origin. In order to calculate the transitional density of the diffusion of the process:
+\[
+X_t = X_s - \int_s^tX_u^3 du +\int_s^t dB_u,
+\]
+we can use the method of lines in order to solve the corresponding Kolmogorov equation. Using the `MOL.density()` function, we can set up and solve a system of ODEs which approximate the transitional density on a finite lattice of the state-space. In __R__:
 
 ```{r,fig.align='center'}
 library("DiffusionRimp")
@@ -44,8 +53,17 @@ res <- MOL.density(Xs, s, t, lims, nodes, delt)
 persp(res$Xt, res$time, pmin(res$density, 1), col = 'white', xlab = 'State (X_t)',ylab='Time (t)',
     zlab='Density f(X_t|X_s)', border = NA, shade = 0.5, theta = 145)
 ```
+Here, `lims <- c(-3, 3)` sets the limits of the lattice whilst `nodes<- 101` breaks up the strip $[-3,3]$ into 101 equispaced points in order to construct the lattice. The parameters `s <- 0` and `t <- 5` give the transition horizon on which to approximate the transitional density whilst `delt` gives the step size for the numerical scheme which solves the ODE approximation to the transitional density.
+
+Note that, although the transitional density appears superficially similar to the Normal distribution, the density function becomes quite flat at the mode of the density as time progresses.
 
 ## Cubic diffusion with multimodal transition density
+Consider now a diffusion process with dynamics given by the SDE:
+\[
+dX_t =X_t(1 -X_t^2)dt + dB_t.
+\]
+In comparison to the previous example, this diffusion has an additional term in the drift coefficient. In this case the drift function has 3 distinct zeroes with two reversion loci at $1$ and $-1$. Consequently, the transitional density has the property that it has a bimodal distribution. This model is also known as the "Double-Well Potential" [@ait1999transition].
+
 
 ```{r,fig.align='center'}
 # Define drift and diffusion terms:
@@ -59,8 +77,12 @@ persp(res$Xt, res$time, pmin(res$density, 1), col = 'white', xlab = 'State (X_t)
     zlab='Density f(X_t|X_s)', border = NA, shade = 0.5, theta = 145)
 ```
 
-## Time-inhomogenous drift and volatility  
-
+## Time-inhomogenous  Double-Well model 
+Using the method of lines it is possible to analyse generalisations of existing models such as the Double-Well model. For example, under time-inhomogeneous drift and diffusion coefficients:
+\[
+dX_t =X_t((1+\cos(2\pi t)) -X_t^2)dt + (1+0.25\sin(3 \pi t))dB_t
+\]
+the transitional density reflects similar time-inhomogeneous features:
 ```{r,fig.align='center'}
 # Define drift and diffusion terms:
 mu  <- function(X,t){X*((1+cos(2*pi*t))-X^2)}
@@ -76,7 +98,15 @@ for(i in 0:1)
 }
 ```
 
-## A bivariate example: Cubic diffusion with oscillating spin
+## A bivariate cubic diffusion with oscillating spin
+In similar fashion, one can analyse non-linear bivariate diffusion models. Consider for example a bivariate cubic diffusion with oscillating spin:
+\[
+\begin{aligned}
+dX_t &=[X_t(1 -X_t^2)+\sin(0.5\pi t)Y_t]dt + 0.5dB_t^{(1)}\\
+dY_t &=[Y_t(1 -Y_t^2)-\sin(0.5\pi t)X_t]dt + 0.5dB_t^{(2)}\\
+\end{aligned}
+\]
+Here, the interaction terms in the drift cuase the process to exhibit 'spin'. Since we have allowed these terms' coefficients to be time-dependent, the direction of the spin may alternate over time. In __R__, we can visualize this via the transitional density using the code:
 
 ```{r,fig.align='center'}
  # Set the parameters of the problem:
@@ -90,8 +120,8 @@ for(i in 0:1)
  delt   <- 1/100        # Time stepsize
  
  # Define drift and diffusion terms:
- mu1   <- function(X,Y,t){X*(1-X^2)+sin(2*pi*t/4)*Y}
- mu2   <- function(X,Y,t){Y*(1-Y^2)-sin(2*pi*t/4)*X}
+ mu1   <- function(X,Y,t){X*(1 - X^2) + sin(0.5*pi*t)*Y}
+ mu2   <- function(X,Y,t){Y*(1 - Y^2) - sin(0.5*pi*t)*X}
  sig11 <- function(X,Y,t){0.5}
  sig22 <- function(X,Y,t){0.5}
  
@@ -110,6 +140,45 @@ for(i in 0:1)
  
 ```
 
+## A more complicated multi-modal model
+Consider a diffusion process with dynamics governed by the SDE:
+\[
+\begin{aligned}
+dX_t &=[-Y_t\sin(X_t\pi)]dt + 0.5dB_t^{(1)}\\
+dY_t &=[-X_t\sin(Y_t\pi)]dt + 0.5dB_t^{(2)}\\
+\end{aligned}
+\]
+subject to the initial conditions $(X_0,Y_0) = (0,0)$. Solving for the transitional density on the time horizon $[0,2.5]$ we can see some interesting dynamics. In __R__:
+
+```{r fig.align='center'}
+# Define drift and diffusion terms:
+mu1   <- function(X,Y,t){-Y*sin(X*pi)} 
+mu2   <- function(X,Y,t){-X*sin(Y*pi)}
+sig11 <- function(X,Y,t){0.5}
+sig22 <- function(X,Y,t){0.5}
+
+# Parameters of the problem:
+X0  <- 0        # Initial X-coordinate
+Y0  <- 0        # Initial Y-coordinate
+s   <- 0        # Starting time
+t   <- 2.5      # Final horizon time
+Xlim <- c(-3,3) # Lattice endpoints in X dim
+Ylim <- c(-3,3) # Lattice endpoints in Y dim
+Nodes <- 121    # How many nodes per dimension (incl. ends)
+delt  <- 1/200  # Step size
+
+# Run the Method of Lines:
+res <- BiMOL.density(X0, Y0, s, t, Xlim, Ylim, Nodes, delt)
+
+time.sequence <- c(0.5,1,1.5,2,2.5)
+k = 0
+for(i in time.sequence)
+{
+  k = k+1
+  persp(res$Xt,res$Yt,res$density[,,i/delt],col='white',xlab='State (X_t)',ylab='State (Y_t)',zlab='Density',border=NA,shade=0.5,theta=145+180*k/5)
+}
+```
+
 --------
 
 # Further reading
@@ -119,6 +188,7 @@ for(i in 0:1)
 * More Vignettes:
     + [Introduction](Part_1_Introduction.html)
     + [Transitional densities](Part_2_Transition_Densities.html)
+    + [First passage time problems](Part_3_First_Passage_Times.html)
     + Or use:
 ```{r,eval=FALSE}
 browseVignettes('DiffusionRimp')

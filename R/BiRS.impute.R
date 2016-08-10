@@ -1,5 +1,107 @@
-BiRS.impute=function (X, time, M, theta1,theta2,sds1,sds2,transform = c(1, 1),  burns = min(floor(updates/2),25000),updates, plot.chain = TRUE, imputation.plot = FALSE, palette = 'mono')
+BiRS.impute=function (X, time, M, theta, sds, diff.type = c(1, 1),  burns = min(floor(updates/2),25000),updates, plot.chain = TRUE, imputation.plot = FALSE, palette = 'mono')
 {
+  transform = diff.type
+  nstp   = length(theta)
+  theta1 =  theta[1:(nstp-2)]
+  theta2 =  theta[(nstp-1):nstp]
+  sds1   =  sds[1:(nstp-2)]
+  sds2   =  sds[(nstp-1):nstp]
+  b1 = '\n==============================================================================\n'
+  b2 = '==============================================================================\n' 
+  warn=c(
+    '1.  Missing input: Argument {X} is missing.\n'
+    ,'2.  Missing input: Argument {time} is missing.\n'
+    ,'3.  Missing input: Argument {theta} is missing.\n'
+    ,'4.  Missing input: Argument {sds} is missing.\n'
+    ,'5.  Input type: Argument {X} must be of type vector!.\n'
+    ,'6.  Input type: Argument {time} must be of type vector!.\n'
+    ,'7.  Input: Less starting parameters than model parameters.\n'
+    ,'8.  Input: More starting parameters than model parameters.\n'
+    ,'9.  Input: length(X) must be > 10.\n'
+    ,'10. Input: length(time) must be > 10.\n'
+    ,'11. Input: length(lower)!=1.\n'
+    ,'12. Input: length(upper)!=1.\n'
+    ,'13. Input: length(P)!=1.\n'
+    ,'14. Input: length(mesh)!=1.\n'
+    ,'15. Input: length(alpha)!=1.\n'
+    ,'16. Input: length(Trunc)!=1.\n'
+    ,'17. Input: length(RK.order)!=1.\n'
+    ,'18. Density: Dtype has to be of type Saddlepoint.\n'
+    ,'19. Density: Range [lower,upper] must be strictly positive for Dtype Gamma or InvGamma.\n'
+    ,'20. Density: Dtype cannot be Beta for observations not in (0,1).\n'
+    ,'21. Density: Argument {upper} must be > {lower}.\n'
+    ,'22. Density: P must be >= 10.\n'
+    ,'23. Density: Trunc[2] must be <= Trunc[1].\n'
+    ,'24. ODEs : Large max(diff(time))/M may result in poor approximations. Try larger M.\n'
+    ,'25. ODEs : max(diff(time))/M must be <1.\n'
+    ,'26. ODEs : Runge Kutta scheme must be of order 4 or 10.\n'
+    ,'27. ODEs : Argument {M} must be >= 10.\n'
+    ,'28. Input: length(X)!=length(time).\n'
+    ,'29. MCMC : Argument {burns} must be < {updates}.\n'
+    ,'30. MCMC : Argument {updates} must be > 2.\n'
+    ,'31. MCMC : length(theta)!=length(sds).\n'
+    ,'32. Model: There has to be at least one model coefficient.\n'
+    ,'33. Input: length(updates)!=1.\n'
+    ,'34. Input: length(burns)!=1.\n'
+    ,'35. Prior: priors(theta) must return a single value.\n'
+    ,'36. Input: NAs not allowed.\n'
+    ,'37. Input: length(Dtype)!=1.\n'
+    ,'38. Input: NAs not allowed.\n'
+    ,'39. Input: {Jdist} has to be of type Normal, Exponential, Gamma or Laplace.\n'
+    ,'40. Input: {Jtype} has to be of type Add or Mult.\n'
+    ,'41. Input: {factorize} has to be TRUE or FALSE.\n'
+    ,'42. Input: Current version supports {Trunc[1]} = 4 or 8.\n'
+    ,'43. Input: Current version supports {Trunc[2]} = 4.\n'
+  )
+  
+  warntrue = rep(F,50)
+  # Check missing values first:
+  if(missing(X))                                                {warntrue[1]=TRUE}
+  if(missing(time))                                             {warntrue[2]=TRUE}
+  if(missing(theta))                                            {warntrue[3]=TRUE}
+  if(missing(sds))                                              {warntrue[4]=TRUE}
+  if(!is.matrix(X))                                             {warntrue[5]=TRUE}
+  if(!is.vector(time))                                          {warntrue[6]=TRUE}
+  # Check model parameters:
+  #if(check.thetas2(theta)!=0)                                   {warntrue[7]=TRUE}
+  #if(!warntrue[7]){if(any(check.thetas(theta,T.seq)==0))        {warntrue[8]=TRUE}}
+  
+  # Check input length:
+  if(dim(X)[1]<10)                                              {warntrue[9]=TRUE}
+  if(length(time)<10)                                          {warntrue[10]=TRUE}
+  if(length(M)!=1)                                             {warntrue[14]=TRUE}
+  if(length(updates)!=1)                                       {warntrue[33]=TRUE}
+  if(length(burns)!=1)                                         {warntrue[34]=TRUE}
+  
+  #  Miscelaneous checks:
+  
+  test.this =max(diff(time))/M
+  if(test.this>0.1)                                            {warntrue[24]=TRUE}
+  if(test.this>=1)                                             {warntrue[25]=TRUE}
+
+  if(dim(X)[1]!=length(time))                                  {warntrue[28]=TRUE}
+  if(!any(warntrue[c(33,34)])){if(burns>updates)               {warntrue[29]=TRUE}}
+  if(!warntrue[33]){if(updates<2)                              {warntrue[30]=TRUE}}
+  if(length(theta)!=length(sds))                               {warntrue[31]=TRUE}
+  if(any(is.na(X))||any(is.na(time)))                          {warntrue[36]=TRUE}
+  if(M<10)                                                     {warntrue[27]=TRUE}
+  # Print output:
+  if(any(warntrue))
+  {
+    prnt = b1
+    for(i in which(warntrue))
+    {
+      prnt = paste0(prnt,warn[i])
+    }
+    prnt = paste0(prnt,b2)
+    stop(prnt)
+  }
+  
+  pow=function(x,p)
+  {
+    x^p
+  }
+  prod=function(a,b){a*b}
   exclude = NULL
   X1=X[,1]
   X2=X[,2]
@@ -234,7 +336,7 @@ BiRS.impute=function (X, time, M, theta1,theta2,sds1,sds2,transform = c(1, 1),  
   #  exclude = N + 200
   #}
 
-  pb <- txtProgressBar(1, updates, 1, style = 3, width = 56)
+  pb <- txtProgressBar(1, updates, 1, style = 1, width = 65)
   tme = Sys.time()
   NN = length(X1.)
 
@@ -368,14 +470,15 @@ BiRS.impute=function (X, time, M, theta1,theta2,sds1,sds2,transform = c(1, 1),  
      xlab="Iteration",main=paste0("sigma[",i,"]"))
      abline(v=burns,lty="dotdash")
     }
-   plot(acc[1,],type="n",col="blue",ylim=c(0,1),main="AcceptanceRates",xlab="Iteration",ylab="Rate")
+   plot(acc[1,],type="n",col="blue",ylim=c(0,1),main="Acceptance Rate",xlab="Iteration",ylab="Rate")
    #polygon(c(0,length(acc[1,]),length(acc[1,]),0),c(0.4,0.4,0,-0),col="lightblue",border=NA)
    #polygon(c(0,length(acc[1,]),length(acc[1,]),0),c(1,1,0.6,0.6),col="lightgreen",border=NA)
    lines(acc[1,],type="l",col="darkblue")
    lines(acc[2,],type="l",col="darkgreen")
    abline(h=seq(0,1,1/10),lty="dotted")
+   abline(h=c(0.2,0.4),lty="dashed",col="red",lwd=1.2)
    plot(ba1/updates,pch=4,col=4,ylim=c(0,1),type="n",
-   main=paste("BBAcceptanceRates(M=",M,")"),xlab="Transition",ylab="Rate")
+   main=paste("BB Acceptance Rates(M=",M,")"),xlab="Transition",ylab="Rate")
    polygon(c(0,length(ba1/updates),length(ba1/updates),0),c(1,1,0.8,0.8),col="lightblue",border=NA)
    points(ba1/updates,pch="-",col=4)
    #points(ba2/updates,pch="-",col=3)
@@ -395,5 +498,7 @@ BiRS.impute=function (X, time, M, theta1,theta2,sds1,sds2,transform = c(1, 1),  
  #mtext(exclude,side=1,cex=0.5,at=exclude)
  }
  theta=rbind(pers1,pers2)
- return(list(per.matrix=t(theta),acceptence.rate=t(acc),bridge.rate=cbind(ba1/updates,ba2/updates),run.time=tme))
+ ret = (list(par.matrix=t(theta),acceptence.rate=t(acc),bridge.rate=cbind(ba1/updates,ba2/updates),run.time=tme))
+ class(ret) = 'RS.impute'
+ return(ret)
 }

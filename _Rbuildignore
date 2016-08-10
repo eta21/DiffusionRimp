@@ -4,3 +4,4 @@
 ^\.travis\.yml$
 ^desktop\.ini$
 ^Intallation-Note\.md$
+^Thumbs\.db$

@@ -5,11 +5,8 @@ Data-imputation and density approximations for diffusion processes.
 ## What is DiffusionRimp?
 __DiffusionRimp__ is a package for performing data imputation on discretely observed diffusion processes as well as calculating numerical approximations to transition and first passage time densities.  
 
-## What is DiffusionRimp?
-__DiffusionRimp__ 
-
 ## Why use DiffusionRimp?
-__DiffusionRimp__ 
+__DiffusionRimp__ provides routines for exploring and analysing diffusion processes with highly non-linear dynamics. Although the analysis of non-linear diffusion processes is often quite challenging, the __DiffusionRimp__ package makes it possible to analyse models with complicated dynamics with basic coding skills and experience in numerical analysis.  
 
 ## Get DiffusionRjgqd?
 Check out [DiffusionRimp](https://github.com/eta21/DiffusionRimp) for the package source files, vignettes and other downloadable content.

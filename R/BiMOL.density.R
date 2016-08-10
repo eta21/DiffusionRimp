@@ -42,6 +42,7 @@ BiMOL.density=function(Xs,Ys,s,t,xlims,ylims,N ,delt ,mu1,mu2,sig11,sig12,sig21,
      if(!missing(sigg21)){body(sigg21) =  parse(text=paste0(sig21,'+matrix(0,dim(X)[1],dim(Y)[2])'))}
      body(sigg22) =  parse(text=paste0(sig22,'+matrix(0,dim(X)[1],dim(Y)[2])'))
    }
+
   f=function(U,tme)
   {
     MU1= muu1(XX1,XX2,tme)*U
@@ -72,6 +73,9 @@ BiMOL.density=function(Xs,Ys,s,t,xlims,ylims,N ,delt ,mu1,mu2,sig11,sig12,sig21,
   dxx2=dx2^2
   XX1=outer(xx1,rep(1,N))
   XX2=t(outer(xx2,rep(1,N)))
+  
+
+  
   if(show.lattice)
   {
     plot(1,1,type='n',xlab='',ylab='',xlim=xlims,ylim=ylims,main='Lattice')

@@ -75,16 +75,12 @@ further analysis may be conducted by calling the function \code{MOL.density()}.
 \examples{
 \donttest{
 #===============================================================================
-# Cubic diffusion with time-varying coefficients.
+
+ # For detailed notes and examples on how to use the MOL.density() function, see
+ # the following vignette:
+
+ RShowDoc('Part_2_Transition_Densities',type='html','DiffusionRimp')
+
 #===============================================================================
-
-# Define drift and diffusion terms.
-mu  <- function(X,t){2*X*(1+0.5*sin(2*pi*t/4)-X^2)}
-sig <- function(X,t){1}
-res <- MOL.density(c(-1),0,15,c(-3,3),81,1/250)
-
-MOL.plot(res)
-
-#-------------------------------------------------------------------------------
 }
 }

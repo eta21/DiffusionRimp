@@ -18,7 +18,7 @@ RS.impute(X, time, M, theta, sds, diff.type = 1, burns = min(floor(updates/2),25
   \item{time}{A vector of time nodes at which the process was observed.}
   \item{M}{The number of points to impute between successive observations. Note that as the transition horizon increases, more points may be required in order to get desirable acceptance rates for Brownian bridges. Note that some transition horizons may be removed from likelihood calculations - see \code{exclude}.}
   \item{theta}{Starting parameters for the model process. }
-  \item{sds}{Proposal standard deviations for the drift parameter chain}
+  \item{sds}{Proposal standard deviations for the drift parameter chain.}
   \item{diff.type}{An indicator assuming values 1, 2 or 3, for which of the predefined volatility structures to impose - see note \bold{[3]}.}
   \item{burns}{The number of updates to burn (only affects traceplots).}
   \item{updates}{The number of updates to perform.}
@@ -75,12 +75,7 @@ Note that \code{theta} is a reserved variable for the parameters. It is left to 
 
 \examples{
 \donttest{
-rm(list=ls(all=TRUE))
 #===============================================================================
-# Lets perform inference on a cubic diffusion with time varying modality.
-#===============================================================================
-
-#-------------------------------------------------------------------------------
 }
 }
 

@@ -8,7 +8,7 @@ Calculate a Pseudo AIC Value for a Diffusion Model via the Method of Lines
 \code{MOL.aic()} approximates the likelihood function for a diffusion model under a given dataset and parameter vector.
 }
 \usage{
-MOL.aic(X, time, delt, xlims, N, theta, plt = TRUE, wrt = FALSE)
+MOL.aic(X, time, delt, xlims, N, theta, diff.type,plt = TRUE, wrt = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -18,6 +18,7 @@ MOL.aic(X, time, delt, xlims, N, theta, plt = TRUE, wrt = FALSE)
   \item{N}{The number of nodes in the spatial domain at which to evaluate the transitional density. Increase \code{N} for more accurate approximations (see note \bold{[3]} and warning \bold{[2]}).}
   \item{delt}{Step size for the time domain of the lattice (see note \bold{[4]}).}
   \item{theta}{Parameter vector at which the AIC should be evaluated. Typically the parameter vector is calculated using \code{RS.impute()}}
+   \item{diff.type}{An indicator assuming values 1, 2 or 3, for which of the predefined volatility structures to impose.}
   \item{plt}{Draw a plot of the calculation as it takes place.}
   \item{wrt}{Write a .cpp file. Useful for inspection purposes.}
 }

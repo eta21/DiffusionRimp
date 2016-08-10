@@ -8,7 +8,8 @@ Calculate a Pseudo AIC Value for a Bivariate Diffusion Model via the Method of L
 \code{MOL.aic()} approximates the likelihood function for a bivariate diffusion model under a given dataset and parameter vector.
 }
 \usage{
-BiMOL.aic(X, time, delt, xlims, ylims, N, theta, plt = TRUE, wrt = FALSE)
+BiMOL.aic(X, time, delt, xlims, ylims, N, theta, diff.type, plt = TRUE,
+          wrt = FALSE, border = NA)
 }
 
 \arguments{
@@ -19,8 +20,10 @@ BiMOL.aic(X, time, delt, xlims, ylims, N, theta, plt = TRUE, wrt = FALSE)
   \item{ylims}{Y-limits for the spatial nodes of the lattice. These limits should be wide enough for the transition density to be negligibly small at the endpoints (see note \bold{[2]}).}
   \item{N}{The number of nodes in each spatial domain at which to evaluate the transitional density. Increase \code{N} for more accurate approximations (see note \bold{[3]} and warning \bold{[2]}).}
  \item{theta}{Parameter vector at which the AIC should be evaluated. Typically the parameter vector is calculated using \code{RS.impute()}}
+  \item{diff.type}{2-Component vector of indicators, each assuming values 1, 2 or 3, for which of the predefined volatility structures to impose.}
  \item{plt}{Draw a plot of the calculation as it takes place.}
  \item{wrt}{Write a .cpp file. Useful for inspection purposes.}
+  \item{border}{Border colour for the mesh of the perspective plot.}
 }
 
 \value{

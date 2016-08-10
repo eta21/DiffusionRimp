@@ -8,11 +8,13 @@ RS.estimates = function(x,thin = 100, burns, CI = c(0.05,0.95), corrmat = FALSE,
      est = apply(x$par.matrix[windw,], 2, mean)
      CI=t(apply(x$par.matrix[windw,], 2, quantile,probs = CI))
      form = function(x,mm = 2){format(round(x, mm), nsmall = mm)}
-     dat=data.frame(cbind(form(cbind(est,CI),3)))
+     dat=(cbind(form(cbind(est,CI),3)))
+     dat = matrix(as.numeric(as.matrix(dat)),dim(dat)[1])
      rownames(dat)=paste0('theta[',1:dim(x$par.matrix)[2],']')
      colnames(dat) = c('Estimate','Lower_CI','Upper_CI')
 
-     dat2=data.frame(form(cor(x$par.matrix[windw,])))
+     dat2=(form(cor(x$par.matrix[windw,])))
+     dat2 = matrix(as.numeric(as.matrix(dat2)),dim(dat2)[1])
      rownames(dat2)=paste0('theta[',1:dim(x$par.matrix)[2],']')
      colnames(dat2)=paste0('theta[',1:dim(x$par.matrix)[2],']')
      if(acf.plot)

@@ -1,7 +1,16 @@
 globalVariables(c('mu','sig'))
-MOL.aic=function(X, time, delt, xlims,N ,theta ,plt = TRUE, wrt = FALSE)
+MOL.aic=function(X, time, delt, xlims,N ,theta,diff.type ,plt = TRUE, wrt = FALSE)
 {
-    solver   =function(Xs, Xt, theta, N , delt , N2, tt  , P , alpha, lower , upper, tro  ){}
+  if(!missing(diff.type))
+  {
+    #print('yeah')
+    sig = function(x,t){}
+    if(diff.type == 1){body(sig) = parse(text=paste0('(theta[',length(theta),'])'))}
+    if(diff.type == 2){body(sig) = parse(text=paste0('(theta[',length(theta),']*sqrt(X))'))}
+    if(diff.type == 3){body(sig) = parse(text=paste0('(theta[',length(theta),']*X)'))}
+    #print(body(sig)[2])
+  }
+  solver   =function(Xs, Xt, theta, N , delt , N2, tt  , P , alpha, lower , upper, tro  ){}
   rm(list =c('solver'))
   topmatter='
   #include <RcppArmadillo.h>
@@ -102,12 +111,12 @@ MOL.aic=function(X, time, delt, xlims,N ,theta ,plt = TRUE, wrt = FALSE)
     if(plt)
     {
       par(mfrow=c(1,2))
-      plot(X~time,type='l',main='Time Series',xlab='Time (t)',ylab='X_t',col='#BBCCEE')
+      plot(X~time,type='l',main='Time Series',xlab='Time (t)',ylab=expression(X[t]),col='#BBCCEE')
       abline(v=(time[i+1]-time[i])/2+time[i],col='darkblue',lwd=1,lty='dashed')
       plot(res~x,type='l',main='Density',col='#222299',xlab=substitute(X[t[i]],list(i=i+1)),ylab = 'Density')
       abline(v=X[i+1],col='darkblue',lwd=1,lty='dashed')
       points(exp(vals[i])~X[i+1],pch=21,bg='darkblue')
-      axis(1,at=x,labels=NA,tcl=-0.25)
+      axis(1,at=X,labels=NA,tcl=-0.25)
     }
   }
   return(list(AIC = -2*sum(vals)+2*length(theta),likelihood=vals,p = length(theta)))
