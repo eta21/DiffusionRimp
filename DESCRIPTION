@@ -1,5 +1,5 @@
 Package: DiffusionRimp
-Version: 0.1.0
+Version: 0.1.1
 Title: Inference and Analysis for Diffusion Processes via Data Imputation and Method of Lines
 Description: Tools for performing inference and analysis using a data-imputation scheme and the method of lines.
 Authors@R:c(person("Etienne A.D.", "Pienaar", email = "etiennead@gmail.com",role = c("aut", "cre")),
