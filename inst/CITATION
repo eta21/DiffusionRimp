@@ -5,7 +5,7 @@ citEntry(entry = "Manual",
   author       = personList(as.person("Etienne A D Pienaar"),
                    as.person("Melvin M Varughese")),
   year         = "2015",
-  note         = "R package version 0.1.0",
+  note         = "R package version 0.1.2",
   url          = "https://CRAN.R-project.org/package=DiffusionRimp",
   textVersion  =
   paste("Etienne A. D. Pienaar, Melvin M. Varughese (2015).",

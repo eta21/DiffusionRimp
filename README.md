@@ -45,7 +45,7 @@ install.packages(“rgl", dep = TRUE)
 
 #### Download the DiffusionRjgqd package and run the code:
 ```
-install.packages("~/DiffusionRimp_0.1.0.tar.gz", repos = NULL, type = "source”)
+install.packages("~/DiffusionRimp_0.1.2.tar.gz", repos = NULL, type = "source”)
 ```
 
 #### Run the following code in R to see if the package works:
